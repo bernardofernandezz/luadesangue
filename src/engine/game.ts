@@ -45,6 +45,8 @@ export interface GameState {
   blade: number | null
   mentor: Record<number, number>
   items: number[]
+  /** Players soaked by the Incendiário, burned when the match is struck. */
+  doused: number[]
   voteCancelled: boolean
   /** Most-voted player, defending before the village confirms the lynch. */
   accused: number | null
@@ -114,7 +116,7 @@ export function createGame(lineup: Lineup, seed = Date.now()): GameState {
   const { names, settings } = lineup
   const s: GameState = {
     players: [], settings, phase: 'reveal', day: 0, queue: [], cursor: 0, choices: [], votes: {}, used: [],
-    lovers: [], blade: null, mentor: {}, items: [], voteCancelled: false, accused: null, inbox: {}, announcements: [],
+    lovers: [], blade: null, mentor: {}, items: [], doused: [], voteCancelled: false, accused: null, inbox: {}, announcements: [],
     next: 'day', hunterQueue: [], log: [], timeline: [], winner: null, seed, startedAt: seed,
   }
   let roles = rolesFor(lineup)
@@ -174,6 +176,11 @@ export function nightAction(s: GameState, id: number): NightAction {
     case 'mercador': return s.items.length < AMULETS
       ? { kind: 'pick', targets: others.filter((o) => !s.items.includes(o)), note: `Amuletos entregues: ${s.items.length}/${AMULETS}` }
       : spent
+    case 'incendiario': {
+      const fresh = others.filter((o) => !s.doused.includes(o))
+      const soaked = s.doused.filter((o) => isAlive(s, o)).map((o) => name(s, o))
+      return { kind: 'pick', targets: fresh, optional: true, power, note: soaked.length ? `Encharcados: ${soaked.join(', ')}` : 'Ninguém encharcado ainda.' }
+    }
     case 'bruxa': {
       const cure = canUse(s, id, 'cura') ? all : null
       const poison = canUse(s, id, 'veneno') ? others : null
@@ -336,6 +343,18 @@ function resolveNight(s: GameState) {
       if (isAlive(s, c.target2)) deaths.set(c.target2, NIGHT_DEATH)
     }
     if (r === 'vidente' && c.target != null) visit(c.actor, c.target, 'foi investigado')
+    if (r === 'incendiario') {
+      if (c.target != null) {
+        s.doused.push(c.target); visit(c.actor, c.target, 'foi encharcado de querosene')
+        log(s, `${name(s, c.actor)} (Incendiário) encharcou ${name(s, c.target)}.`)
+      }
+      if (c.use && canUse(s, c.actor, 'fosforo')) {
+        spend(s, c.actor, 'fosforo')
+        log(s, `${name(s, c.actor)} (Incendiário) riscou o fósforo.`)
+        for (const id of s.doused) if (isAlive(s, id)) deaths.set(id, 'morreu queimado(a) num incêndio')
+        s.doused = []
+      }
+    }
   }
 
   // Information roles run last so they see every visit of the night.
@@ -347,6 +366,11 @@ function resolveNight(s: GameState) {
       tell(s, c.actor, seen.length
         ? `Pegadas da noite ${s.day}: ${name(s, c.target)} foi até a casa de ${seen.join(', ')}.`
         : `Pegadas da noite ${s.day}: ${name(s, c.target)} não saiu de casa.`)
+    }
+    if (r === 'lobo_farejador' && c.target != null) {
+      const role = ROLES[roleOf(c.target)].name
+      tell(s, c.actor, `Seu faro na noite ${s.day}: ${name(s, c.target)} é ${role}.`)
+      log(s, `${name(s, c.actor)} (Lobo Farejador) farejou ${name(s, c.target)}: ${role}.`)
     }
     if (r === 'sonambulo') {
       const v = pickOne(s, alive(s).filter((p) => p.id !== c.actor))

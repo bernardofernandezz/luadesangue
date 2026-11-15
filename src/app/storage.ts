@@ -8,7 +8,7 @@ const KEY = 'lua-de-sangue:v2'
 export interface Saved { setup: SetupData; game: GameState | null; history: GameState[]; tutorialSeen: boolean; stats: Stats }
 
 /** Fills fields added after a save was written, so older saves keep working. */
-const upgradeGame = (g: GameState): GameState => ({ ...g, settings: { ...defaultSettings, ...g.settings }, timeline: g.timeline ?? [], accused: g.accused ?? null, startedAt: g.startedAt ?? g.seed })
+const upgradeGame = (g: GameState): GameState => ({ ...g, settings: { ...defaultSettings, ...g.settings }, timeline: g.timeline ?? [], accused: g.accused ?? null, doused: g.doused ?? [], startedAt: g.startedAt ?? g.seed })
 
 // localStorage can be missing, blocked (private browsing) or full; the game must still run, just without saving.
 export function load(): Saved {

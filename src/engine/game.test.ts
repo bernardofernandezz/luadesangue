@@ -208,3 +208,26 @@ describe('defesa', () => {
     expect(dead(s)).toEqual([2])
   })
 })
+
+describe('papéis novos', () => {
+  it('Lobo Farejador descobre o papel de quem escolheu', () => {
+    const s = night(setup(['lobo_farejador', 'vidente', 'aldeao', 'aldeao', 'aldeao']), { 0: { target: 1 } })
+    expect(s.inbox[0]?.[0]).toContain('P1 é Vidente')
+  })
+
+  it('o fósforo queima todos os encharcados, mesmo protegidos', () => {
+    const roles: RoleId[] = ['incendiario', 'medico', 'aldeao', 'aldeao', 'lobisomem', 'aldeao']
+    let s = night(setup(roles), { 0: { target: 2 }, 4: { target: 5 } })
+    s = ackAnnounce(s); s = startVote(s); s = openVote(s, null); s = ackAnnounce(s)
+    s = night(s, { 0: { target: 3, use: true }, 1: { target: 3 } })
+    expect(dead(s).sort()).toEqual([2, 3, 5])
+    expect(s.doused).toEqual([])
+  })
+
+  it('o Incendiário vence quando sobram dois', () => {
+    const s = setup(['incendiario', 'aldeao', 'aldeao', 'lobisomem'])
+    s.players[2].alive = false
+    s.players[3].alive = false
+    expect(checkWin(s)?.title).toBe('O Incendiário venceu')
+  })
+})
