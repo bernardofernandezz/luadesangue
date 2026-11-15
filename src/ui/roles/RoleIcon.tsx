@@ -21,9 +21,11 @@ const roleArt: Record<RoleId, ReactNode> = {
   lobo_alfa: <><path d="M3.5 18h17" /><path d="m4.5 18-1-10.5 5 4L12 4.5l3.5 7 5-4-1 10.5" /><circle cx="12" cy="14.5" r=".8" fill="currentColor" /></>,
   lobo_sombra: <><circle cx="12" cy="12" r="8" /><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" /></>,
   lobo_uivante: <><circle cx="12" cy="11" r="5" /><path d="M4.5 7.5a8.5 8.5 0 0 0 0 7M19.5 7.5a8.5 8.5 0 0 1 0 7" /><path d="M2 5a12 12 0 0 0 0 12M22 5a12 12 0 0 1 0 12" opacity=".5" /></>,
+  lobo_farejador: <><circle cx="7" cy="8" r="1.8" /><circle cx="12" cy="5.5" r="1.8" /><circle cx="17" cy="8" r="1.8" /><path d="M12 11c-3.5 0-6 3.5-6 6.2C6 19 7.3 20 9 20c1.2 0 2-.6 3-.6s1.8.6 3 .6c1.7 0 3-1 3-2.8C18 14.5 15.5 11 12 11z" /></>,
   tolo: <><path d="M4.5 5h15v6a7.5 7.5 0 0 1-15 0z" /><path d="M8.5 10h1.5M14 10h1.5" /><path d="M9 14c1.6 1.4 4.4 1.4 6 0" /></>,
   assassino: <><path d="M20 3.5 10 13.5l1.8 1.8L21 6V3.5z" /><path d="m10 13.5-5.5 5.5 1.5 1.5 5.5-5.5" /><path d="m7.5 12 4.5 4.5" /></>,
   mercador: <><path d="M9 3h6l-1.5 3h-3z" /><path d="M10.5 6C6.5 8 4.5 11.5 4.5 15a5 5 0 0 0 5 5h5a5 5 0 0 0 5-5c0-3.5-2-7-6-9" /><path d="M12 10.5v7M10 12.5h3a1.2 1.2 0 0 1 0 2.4h-2a1.2 1.2 0 0 0 0 2.4h3" /></>,
+  incendiario: <><path d="M12 3c.8 3.2 5.5 5.2 5.5 10.5a5.5 5.5 0 0 1-11 0c0-2.8 1.6-4.2 2.3-6 1.2 1 1.9 2.2 2 3.4 1.2-1.7 1.6-4.5 1.2-7.9z" /><path d="M12 20a2.5 2.5 0 0 1-2.5-2.5c0-1.5 1.3-2.3 2.5-4 1.2 1.7 2.5 2.5 2.5 4A2.5 2.5 0 0 1 12 20z" /></>,
 }
 
 export const RoleIcon = ({ role, size, className }: { role: RoleId; size?: number; className?: string }) =>

@@ -11,12 +11,12 @@ import { RoleBadge } from '../roles/RoleViews'
 import { teamBg, teamText } from '../roles/teamStyles'
 import { spring } from '../kit/styles'
 
-interface Props { s: GameState; onAgain: () => void; onMenu: () => void }
+interface Props { s: GameState; onAgain: () => void; onMenu: () => void; onScore?: () => void }
 
 const winnerColor = (t: Winner['team']) => (t === 'amantes' ? 'text-love bg-love/12' : t === 'ninguem' ? 'text-muted bg-raised' : `${teamText[t]} ${teamBg[t]}`)
 const logIcon: Record<LogEntry['kind'], UiIconName> = { role: 'users', action: 'moon', death: 'skull', vote: 'scale', win: 'trophy' }
 
-export function End({ s, onAgain, onMenu }: Props) {
+export function End({ s, onAgain, onMenu, onScore }: Props) {
   const [timeline, setTimeline] = useState(false)
   const w = s.winner!
   const hero = w.team === 'amantes' ? <Icon name="heart" size={40} />
@@ -34,6 +34,8 @@ export function End({ s, onAgain, onMenu }: Props) {
         <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-2 font-display text-4xl leading-tight text-balance text-gradient">{w.title}</motion.h1>
       </div>
       <div className="mt-8"><Roster players={winnersFirst} winners={w.ids} delay={0.7} /></div>
+      <ShareResult s={s} />
+      {onScore && <Btn kind="ghost" icon="trophy" className="mt-3 w-full" onClick={onScore}>Ver placar</Btn>}
       {!timeline ? <Btn kind="ghost" icon="book" className="mt-6 w-full" onClick={() => setTimeline(true)}>Ver o que aconteceu</Btn> : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 space-y-6">
           {days.map((d) => (
@@ -55,6 +57,22 @@ export function End({ s, onAgain, onMenu }: Props) {
       )}
     </Screen>
   )
+}
+
+function ShareResult({ s }: { s: GameState }) {
+  const [copied, setCopied] = useState(false)
+  const text = [
+    `🌕 Lua de Sangue: ${s.winner!.title} em ${s.day} ${s.day === 1 ? 'dia' : 'dias'}.`, '',
+    ...s.players.map((p) => `${s.winner!.ids.includes(p.id) ? '🏆' : p.alive ? '•' : '💀'} ${p.name}: ${ROLES[p.role].name}`),
+  ].join('\n')
+  const share = async () => {
+    try {
+      if (navigator.share) return await navigator.share({ title: 'Lua de Sangue', text })
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+    } catch { /* share sheet dismissed or clipboard blocked */ }
+  }
+  return <Btn kind="ghost" icon={copied ? 'check' : 'letter'} className="mt-3 w-full" onClick={share}>{copied ? 'Copiado' : 'Compartilhar resultado'}</Btn>
 }
 
 /** End of a deal-only match: a human narrator takes over. */

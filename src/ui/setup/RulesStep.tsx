@@ -15,6 +15,7 @@ export function RulesStep({ settings, setS, n, roles }: { settings: Settings; se
       ]} />
       {settings.mode === 'narrador' && <>
       <Switch label="Revelar papel ao morrer" hint="Quem morre mostra quem era. Desligado é mais difícil." checked={settings.revealOnDeath} onChange={(v) => setS({ revealOnDeath: v })} />
+      <Switch label="Sons" hint="Uivo ao anoitecer, sino ao amanhecer, vento à noite." checked={settings.sound} onChange={(v) => setS({ sound: v })} />
       <Switch label="Narração por voz" hint="O celular lê os anúncios em voz alta." checked={settings.narration} onChange={(v) => setS({ narration: v })} />
       <Choice title="Votação" value={settings.voteMode} set={(voteMode) => setS({ voteMode })} options={[
         ['secreta', 'Secreta', 'Cada um vota no celular, escondido.'],
@@ -23,6 +24,12 @@ export function RulesStep({ settings, setS, n, roles }: { settings: Settings; se
       <Choice title="Empate na votação" value={settings.tie} set={(tie) => setS({ tie })} options={[
         ['ninguem', 'Ninguém morre', 'Empatou, ninguém é linchado.'],
         ['sorteio', 'Sorteio', 'Um dos empatados é sorteado.'],
+      ]} />
+      <Choice title="Defesa antes do linchamento" value={String(settings.defenseSeconds)} set={(v) => setS({ defenseSeconds: Number(v) })} options={[
+        ['0', 'Sem defesa', 'O mais votado é linchado na hora.'],
+        ['30', '30 segundos', 'Fala rápida, depois a vila confirma.'],
+        ['45', '45 segundos', 'O padrão. Depois a vila confirma.'],
+        ['60', '1 minuto', 'Defesa longa, depois a vila confirma.'],
       ]} />
       <div className="rounded-3xl card p-4">
         <div className="flex justify-between"><span className="font-medium">Tempo de discussão</span><span className="text-moon tabular-nums">{clock(settings.discussionSeconds)}</span></div>

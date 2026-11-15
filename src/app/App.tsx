@@ -1,8 +1,9 @@
 import { AnimatePresence, MotionConfig, motion, useIsPresent } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { ackAnnounce, createGame, hunterShoot, openVote, revealNext, startVote, submitNight, submitVote, type GameState } from '../engine/game'
+import { ackAnnounce, confirmLynch, createGame, hunterShoot, openVote, revealNext, startVote, submitNight, submitVote, type GameState } from '../engine/game'
 import { Announce, Hunter } from '../ui/game/Announce'
 import { Day } from '../ui/game/Day'
+import { Defense } from '../ui/game/Defense'
 import { Dealt, End } from '../ui/game/End'
 import { GameMenu } from '../ui/game/GameMenu'
 import { GameIsland } from '../ui/game/Island'
@@ -14,6 +15,9 @@ import { IconBtn } from '../ui/kit/controls'
 import { corner } from '../ui/kit/styles'
 import { PhotoContext } from '../ui/players/photos'
 import { RoleGuide } from '../ui/roles/RoleGuide'
+import { Sheet } from '../ui/kit/layout'
+import { Scoreboard } from '../ui/players/Scoreboard'
+import { addResult, emptyStats } from './stats'
 import { Setup } from '../ui/setup/Setup'
 import { Tutorial } from '../ui/help/Tutorial'
 import { load, save, type Saved } from './storage'
@@ -26,11 +30,13 @@ export default function App() {
   const [menu, setMenu] = useState(false)
   const [guide, setGuide] = useState(false)
   const [timer, setTimer] = useState<number>()
+  const [score, setScore] = useState(false)
   const [tutorial, setTutorial] = useState(!st.tutorialSeen)
   const { game, setup } = st
   const { interlude, endInterlude } = usePhaseEffects(game)
 
   useEffect(() => save(st), [st])
+  useEffect(() => { if (game?.phase === 'end') setSt((cur) => ({ ...cur, stats: addResult(cur.stats, game) })) }, [game])
 
   const apply = (fn: (g: GameState) => GameState) =>
     setSt((cur) => (cur.game ? { ...cur, game: fn(cur.game), history: [...cur.history.slice(-UNDO_DEPTH), cur.game] } : cur))
@@ -42,7 +48,7 @@ export default function App() {
   let screen: ReactNode
   let key = 'setup'
   if (!game) {
-    screen = <Setup data={setup} onChange={(d) => setSt((cur) => ({ ...cur, setup: d }))} onStart={start} onHelp={() => setTutorial(true)} onGuide={() => setGuide(true)} />
+    screen = <Setup data={setup} onChange={(d) => setSt((cur) => ({ ...cur, setup: d }))} onStart={start} onHelp={() => setTutorial(true)} onGuide={() => setGuide(true)} onScore={() => setScore(true)} />
   } else {
     key = `${game.phase}-${game.day}-${game.cursor}-${game.hunterQueue.length}-${game.next}`
     screen = {
@@ -52,7 +58,8 @@ export default function App() {
       hunter: <Hunter s={game} onShoot={(t) => apply((g) => hunterShoot(g, t))} />,
       day: <Day s={game} onVote={() => apply(startVote)} onTick={setTimer} />,
       vote: <Vote s={game} onSecret={(t) => apply((g) => submitVote(g, t))} onOpen={(t) => apply((g) => openVote(g, t))} />,
-      end: <End s={game} onAgain={start} onMenu={quit} />,
+      defense: <Defense s={game} onDecide={(yes) => apply((g) => confirmLynch(g, yes))} onTick={setTimer} />,
+      end: <End s={game} onAgain={start} onMenu={quit} onScore={() => setScore(true)} />,
       dealt: <Dealt s={game} onAgain={start} onMenu={quit} />,
     }[game.phase]
   }
@@ -75,6 +82,9 @@ export default function App() {
           </>
         )}
         <RoleGuide open={guide} onClose={() => setGuide(false)} />
+        <Sheet open={score} onClose={() => setScore(false)} title="Placar">
+          <Scoreboard stats={st.stats} onReset={() => setSt((cur) => ({ ...cur, stats: { ...emptyStats, counted: cur.stats.counted } }))} />
+        </Sheet>
 
         <AnimatePresence>{interlude && <Transition key={`${interlude.kind}${interlude.day}`} {...interlude} onDone={endInterlude} />}</AnimatePresence>
         <AnimatePresence>{tutorial && <Tutorial onDone={closeTutorial} />}</AnimatePresence>

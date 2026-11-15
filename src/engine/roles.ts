@@ -3,11 +3,11 @@ export type Team = 'vila' | 'lobos' | 'solo'
 export type RoleId =
   | 'aldeao' | 'vidente' | 'medico' | 'bruxa' | 'cacador' | 'cupido' | 'guarda_costas' | 'prefeito'
   | 'ferreiro' | 'rastreador' | 'herdeiro' | 'faroleiro' | 'sonambulo'
-  | 'lobisomem' | 'lobo_alfa' | 'lobo_sombra' | 'lobo_uivante'
-  | 'tolo' | 'assassino' | 'mercador'
+  | 'lobisomem' | 'lobo_alfa' | 'lobo_sombra' | 'lobo_uivante' | 'lobo_farejador'
+  | 'tolo' | 'assassino' | 'mercador' | 'incendiario'
 
 /** Abilities that can be used only once per game. */
-export type Ability = 'cura' | 'veneno' | 'lamina' | 'farol' | 'sombra' | 'uivo'
+export type Ability = 'cura' | 'veneno' | 'lamina' | 'farol' | 'sombra' | 'uivo' | 'fosforo'
 
 interface RoleDef {
   id: RoleId
@@ -164,6 +164,9 @@ export const ROLE_LIST: RoleDef[] = [
     power: { ability: 'sombra', title: 'Usar a sombra (1×)', text: 'Seu alvo vira o alvo da matilha, sem contar os votos.', summary: 'com a sombra' }, tagline: 'Invisível para a Vidente.', goal: LOBO_GOAL, how: [...LOBO_HOW.slice(0, 2), 'A Vidente te vê como inocente.', 'Uma vez por jogo, use a sombra para impor o alvo da matilha.'], tip: 'Você pode se fingir de investigado e "limpo" sem medo.', prompt: LOBO_PROMPT, promptHint: LOBO_HINT },
   { id: 'lobo_uivante', name: 'Lobo Uivante', team: 'lobos', weight: -7, novo: true, verb: 'Atacar',
     power: { ability: 'uivo', title: 'Uivar (1×)', text: 'A votação de amanhã será cancelada.', summary: 'e uivar' }, tagline: 'Um uivo que silencia a votação.', goal: LOBO_GOAL, how: [...LOBO_HOW.slice(0, 2), 'Uma vez por jogo, uive: a votação do dia seguinte é cancelada.'], tip: 'Uive quando um lobo estiver prestes a ser linchado.', prompt: LOBO_PROMPT, promptHint: LOBO_HINT },
+  { id: 'lobo_farejador', name: 'Lobo Farejador', team: 'lobos', weight: -8, novo: true, verb: 'Atacar e farejar', tagline: 'Fareja o papel de quem ataca.', goal: LOBO_GOAL,
+    how: [...LOBO_HOW.slice(0, 2), 'Você fareja quem escolher para o ataque: na próxima vez, descobre o papel dessa pessoa, mesmo que a matilha ataque outra.'],
+    tip: 'Fareje quem parece ter poder. Conte à matilha e use isso de dia.', prompt: LOBO_PROMPT, promptHint: 'Quem você escolher também será farejado.' },
   {
     id: 'tolo', name: 'Tolo', team: 'solo', weight: -2, winsIfLynched: true, winTitle: 'O Tolo venceu',
     tagline: 'Quer ser linchado.',
@@ -186,6 +189,16 @@ export const ROLE_LIST: RoleDef[] = [
     how: ['Toda noite, entregue um amuleto a alguém diferente (até 3).', 'Os amuletos não têm poder: são só a sua aposta.', 'Depois, ajude a manter seus portadores vivos.'],
     tip: 'Entregue para quem parece que vai sobreviver até o fim.',
     prompt: 'Quem recebe um amuleto?', promptHint: 'Cada amuleto deve ir para uma pessoa diferente.',
+  },
+  {
+    id: 'incendiario', name: 'Incendiário', team: 'solo', weight: -5, novo: true, winsAlone: true, winTitle: 'O Incendiário venceu', verb: 'Encharcar',
+    skip: 'Não encharcar ninguém esta noite',
+    power: { ability: 'fosforo', title: 'Riscar o fósforo (1×)', text: 'Todos os encharcados queimam esta noite. Nada protege.', summary: 'e riscar o fósforo' },
+    tagline: 'Encharca a vila em silêncio e risca um fósforo.',
+    goal: 'Ser o último vivo, ou sobrar só você e mais uma pessoa.',
+    how: ['Toda noite, encharque alguém de querosene. Ninguém percebe.', 'Uma vez por jogo, risque o fósforo: todos os encharcados vivos morrem, sem proteção possível.', 'Os lobos e a vila são seus inimigos.'],
+    tip: 'Encharque os mais fortes e espere a hora em que o fósforo vira o jogo.',
+    prompt: 'Quem você vai encharcar?', promptHint: 'Os encharcados não sabem. O fósforo queima todos de uma vez.',
   },
 ]
 

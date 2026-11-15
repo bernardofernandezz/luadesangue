@@ -33,6 +33,7 @@ export function RolesStep({ data, set, setS }: { data: SetupData; set: (p: Parti
   const [team, setTeam] = useState<Team>('vila')
   const [info, setInfo] = useState<RoleId | null>(null)
   const [pickFor, setPickFor] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
   const { pool, names, settings } = data
   const assigned = rolesFor(data)
   const count = (r: RoleId) => pool.filter((x) => x === r).length
@@ -50,9 +51,10 @@ export function RolesStep({ data, set, setS }: { data: SetupData; set: (p: Parti
           <p className="mt-1 text-sm text-muted">{settings.randomRoles ? 'Toque para adicionar, segure para ler. Pode escolher mais papéis que jogadores: o jogo sorteia quais entram.' : 'Escolha o papel de cada jogador.'}</p>
         </div>
         {settings.randomRoles && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Btn kind="ghost" size="sm" onClick={() => set({ pool: pool.length >= ROLE_LIST.length ? [] : ROLE_LIST.map((r) => r.id) })}>{pool.length >= ROLE_LIST.length ? 'Limpar' : 'Todos'}</Btn>
             <Btn kind="ghost" size="sm" icon="sparkle" onClick={() => set({ pool: preset(names.length) })}>Sugerir</Btn>
+            <Btn kind="ghost" size="sm" icon="flag" onClick={() => setSaved(true)}>Salvas</Btn>
           </div>
         )}
       </div>
@@ -93,6 +95,9 @@ export function RolesStep({ data, set, setS }: { data: SetupData; set: (p: Parti
         </ul>
       )}
 
+      <Sheet open={saved} onClose={() => setSaved(false)} title="Escalações salvas">
+        <Presets data={data} set={set} onLoad={() => setSaved(false)} />
+      </Sheet>
       <Sheet open={!!info} onClose={() => setInfo(null)} title="Detalhes do papel">
         {info && <RoleDetails role={info} />}
       </Sheet>
@@ -139,5 +144,39 @@ function RoleTile({ role, count, i, onAdd, onRemove, onInfo }: { role: RoleId; c
         )}
       </AnimatePresence>
     </motion.div>
+  )
+}
+
+function Presets({ data, set, onLoad }: { data: SetupData; set: (p: Partial<SetupData>) => void; onLoad: () => void }) {
+  const [draft, setDraft] = useState('')
+  const { presets, pool, settings } = data
+  const name = draft.trim()
+  const save = () => {
+    if (!name || !pool.length) return
+    set({ presets: [...presets.filter((x) => x.name !== name), { name, pool, settings }] })
+    setDraft('')
+  }
+  return (
+    <div>
+      <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); save() }}>
+        <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Nome da escalação" maxLength={24} aria-label="Nome da escalação" enterKeyHint="done"
+          className="min-h-12 min-w-0 flex-1 rounded-2xl card px-4 text-base outline-none placeholder:text-muted/70 focus:ring-2 focus:ring-moon/50" />
+        <Btn size="sm" disabled={!name || !pool.length} onClick={save}>Salvar atual</Btn>
+      </form>
+      {!pool.length && <p className="mt-2 text-sm text-muted">Escolha alguns papéis antes de salvar.</p>}
+      <ul className="mt-5 space-y-2">
+        {presets.map((x) => (
+          <li key={x.name} className="card flex items-center gap-2 rounded-2xl p-1.5 pl-4">
+            <button className="min-w-0 flex-1 py-2 text-left" onClick={() => { set({ pool: x.pool, settings: { ...settings, ...x.settings, randomRoles: true } }); onLoad() }}>
+              <span className="block truncate font-medium">{x.name}</span>
+              <span className="block text-sm text-muted">{x.pool.length} papéis · {x.pool.filter((r) => ROLES[r].team === 'lobos').length} lobo(s)</span>
+            </button>
+            <button aria-label={`Apagar ${x.name}`} onClick={() => set({ presets: presets.filter((y) => y !== x) })}
+              className="grid size-10 place-items-center rounded-full text-muted"><Icon name="close" size={16} /></button>
+          </li>
+        ))}
+        {!presets.length && <li className="py-6 text-center text-sm text-muted">Nenhuma escalação salva ainda.</li>}
+      </ul>
+    </div>
   )
 }

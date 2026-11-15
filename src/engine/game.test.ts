@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { ackAnnounce, checkWin, createGame, current, drawRoles, hunterShoot, noteText, openVote, revealNext, startVote, submitNight, submitVote, type GameState, type NightInput } from './game'
+import { ackAnnounce, checkWin, confirmLynch, createGame, current, drawRoles, hunterShoot, noteText, openVote, revealNext, startVote, submitNight, submitVote, type GameState, type NightInput } from './game'
 import { isWolf, type RoleId } from './roles'
 import { defaultSettings, preset, type Settings } from './setup'
 
-const settings: Settings = { ...defaultSettings, randomRoles: false, narration: false }
+const settings: Settings = { ...defaultSettings, randomRoles: false, narration: false, defenseSeconds: 0 }
 const names = (n: number) => Array.from({ length: n }, (_, i) => `P${i}`)
 
 function setup(roles: RoleId[], extra: Partial<Settings> = {}): GameState {
@@ -173,5 +173,61 @@ describe('modos e consistência', () => {
     let s = night(setup(['lobisomem', 'aldeao', 'aldeao', 'aldeao']), { 0: { target: 1 } })
     s = ackAnnounce(s)
     expect(s.timeline.map((t) => t.text).join()).toContain('P1')
+  })
+})
+
+describe('defesa', () => {
+  const toVote = (extra: Partial<Settings>) => {
+    let s = night(setup(['lobisomem', 'aldeao', 'aldeao', 'aldeao', 'aldeao'], extra), {})
+    s = ackAnnounce(s); return startVote(s)
+  }
+
+  it('o mais votado se defende e a vila confirma', () => {
+    let s = toVote({ defenseSeconds: 45 })
+    while (s.phase === 'vote') s = submitVote(s, current(s).id === 0 ? 1 : 0)
+    expect(s.phase).toBe('defense')
+    expect(s.accused).toBe(0)
+    expect(dead(s)).toEqual([])
+    s = confirmLynch(s, true)
+    expect(dead(s)).toEqual([0])
+    expect(s.phase).toBe('announce')
+  })
+
+  it('a vila pode poupar o acusado', () => {
+    let s = toVote({ defenseSeconds: 45, voteMode: 'aberta' })
+    s = openVote(s, 2)
+    expect(s.phase).toBe('defense')
+    s = confirmLynch(s, false)
+    expect(dead(s)).toEqual([])
+    expect(s.accused).toBeNull()
+    expect(s.phase).toBe('announce')
+  })
+
+  it('sem defesa, lincha direto', () => {
+    const s = openVote(toVote({ defenseSeconds: 0 }), 2)
+    expect(dead(s)).toEqual([2])
+  })
+})
+
+describe('papéis novos', () => {
+  it('Lobo Farejador descobre o papel de quem escolheu', () => {
+    const s = night(setup(['lobo_farejador', 'vidente', 'aldeao', 'aldeao', 'aldeao']), { 0: { target: 1 } })
+    expect(s.inbox[0]?.[0]).toContain('P1 é Vidente')
+  })
+
+  it('o fósforo queima todos os encharcados, mesmo protegidos', () => {
+    const roles: RoleId[] = ['incendiario', 'medico', 'aldeao', 'aldeao', 'lobisomem', 'aldeao']
+    let s = night(setup(roles), { 0: { target: 2 }, 4: { target: 5 } })
+    s = ackAnnounce(s); s = startVote(s); s = openVote(s, null); s = ackAnnounce(s)
+    s = night(s, { 0: { target: 3, use: true }, 1: { target: 3 } })
+    expect(dead(s).sort()).toEqual([2, 3, 5])
+    expect(s.doused).toEqual([])
+  })
+
+  it('o Incendiário vence quando sobram dois', () => {
+    const s = setup(['incendiario', 'aldeao', 'aldeao', 'lobisomem'])
+    s.players[2].alive = false
+    s.players[3].alive = false
+    expect(checkWin(s)?.title).toBe('O Incendiário venceu')
   })
 })
