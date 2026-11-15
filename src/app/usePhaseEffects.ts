@@ -47,6 +47,21 @@ export function usePhaseEffects(game: GameState | null) {
     if (next && key !== shown.current) { shown.current = key!; setInterlude(next) }
   }, [game])
 
+  // Keep the screen on during a match; the lock is dropped whenever the page is hidden, so take it again on return.
+  const playing = !!game
+  useEffect(() => {
+    if (!playing || !('wakeLock' in navigator)) return
+    let lock: WakeLockSentinel | null = null
+    let done = false
+    const take = () => {
+      if (document.visibilityState !== 'visible') return
+      navigator.wakeLock.request('screen').then((l) => { if (done) l.release(); else lock = l }).catch(() => {})
+    }
+    take()
+    document.addEventListener('visibilitychange', take)
+    return () => { done = true; document.removeEventListener('visibilitychange', take); lock?.release().catch(() => {}) }
+  }, [playing])
+
   const isDay = !!game && (['day', 'vote', 'hunter', 'announce'].includes(game.phase) || interlude?.kind === 'dawn') && interlude?.kind !== 'night'
   useEffect(() => { document.body.classList.toggle('day', isDay) }, [isDay])
 

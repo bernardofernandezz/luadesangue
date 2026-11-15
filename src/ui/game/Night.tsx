@@ -8,6 +8,7 @@ import { selectedClass } from '../kit/styles'
 import { ConfirmBar, Screen, Sheet } from '../kit/layout'
 import { Avatar } from '../players/Avatar'
 import { PassTo } from './PassTo'
+import { useReadDelay } from '../kit/useReadDelay'
 import { PlayerGrid } from '../players/PlayerGrid'
 import { RoleBadge, RoleDetails } from '../roles/RoleViews'
 
@@ -29,11 +30,16 @@ function NightTurn({ s, p, onChoose }: { s: GameState; p: Player; onChoose: Choo
   }
 }
 
+/** Every turn lasts at least this long, so nobody can guess a role from how fast the phone came back. */
+const MIN_TURN_MS = 4000
+
 function Turn({ s, p, title, hint, footer, children }: { s: GameState; p: Player; title?: string; hint?: string; footer: ReactNode; children: ReactNode }) {
   const def = ROLES[p.role]
+  const ready = useReadDelay(MIN_TURN_MS)
   return (
     <Screen lead={<RoleBadge role={p.role} size={56} />} kicker={`${def.name} · ${p.name}`} title={title ?? def.prompt}
-      hint={<>{hint ?? def.promptHint}<RoleHelp p={p} /></>} footer={footer}>
+      hint={<>{hint ?? def.promptHint}<RoleHelp p={p} /></>}
+      footer={<fieldset disabled={!ready} className="contents">{footer}</fieldset>}>
       <Letters msgs={s.inbox[p.id]} />
       {children}
     </Screen>
