@@ -15,10 +15,11 @@ export interface Settings {
   tie: 'ninguem' | 'sorteio'
   /** Seconds the most-voted player gets to defend before the village confirms. 0 skips the defense. */
   defenseSeconds: number
+  sound: boolean
 }
 
 export const defaultSettings: Settings = {
-  randomRoles: true, revealOnDeath: true, discussionSeconds: 120, voteMode: 'secreta', narration: true, mode: 'narrador', tie: 'ninguem', defenseSeconds: 45,
+  randomRoles: true, revealOnDeath: true, discussionSeconds: 120, voteMode: 'secreta', narration: true, mode: 'narrador', tie: 'ninguem', defenseSeconds: 45, sound: true,
 }
 
 export interface Lineup {

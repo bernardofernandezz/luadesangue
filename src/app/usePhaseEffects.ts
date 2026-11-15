@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { noteText, player, type GameState } from '../engine/game'
 import type { Interlude } from '../ui/game/Transition'
+import { bell, fanfare, howl, setAmbience, setSoundEnabled, thud } from '../ui/kit/sound'
 
 
 /** Public moments read aloud. Private turns stay silent. */
@@ -45,8 +46,23 @@ export function usePhaseEffects(game: GameState | null) {
     if (game.phase === 'reveal') shown.current = ''
     const next = interludeFor(game)
     const key = next && `${next.kind}${next.day}`
-    if (next && key !== shown.current) { shown.current = key!; setInterlude(next) }
+    if (next && key !== shown.current) {
+      shown.current = key!
+      setInterlude(next)
+      if (next.kind === 'night') { howl(); setAmbience(true) } else { bell(); setAmbience(false) }
+    }
   }, [game])
+
+  const sound = !!game?.settings.sound
+  useEffect(() => { setSoundEnabled(sound); return () => setSoundEnabled(false) }, [sound])
+  const sting = !game ? null
+    : game.phase === 'end' ? `end-${game.startedAt}`
+    : game.phase === 'announce' && game.announcements.some((n) => n.kind === 'death') ? `death-${game.day}-${game.next}-${game.hunterQueue.length}`
+    : null
+  useEffect(() => {
+    if (!sting) return
+    if (sting.startsWith('end')) { setAmbience(false); fanfare() } else thud()
+  }, [sting])
 
   // Keep the screen on during a match; the lock is dropped whenever the page is hidden, so take it again on return.
   const playing = !!game

@@ -1,12 +1,14 @@
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { clock } from './format'
+import { tick } from './sound'
 
 /** Seconds left of a countdown that buzzes at 10s and at the end. Reports each tick to `onTick` (the island shows it). */
 export function useCountdown(total: number, onTick?: (left: number | undefined) => void) {
   const [left, setLeft] = useState(total)
   useEffect(() => {
     if (left === 10) navigator.vibrate?.(80)
+    if (left > 0 && left <= 10) tick()
     if (left <= 0) { navigator.vibrate?.([200, 100, 200]); return }
     const t = setTimeout(() => setLeft(left - 1), 1000)
     return () => clearTimeout(t)

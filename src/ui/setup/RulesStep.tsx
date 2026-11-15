@@ -15,6 +15,7 @@ export function RulesStep({ settings, setS, n, roles }: { settings: Settings; se
       ]} />
       {settings.mode === 'narrador' && <>
       <Switch label="Revelar papel ao morrer" hint="Quem morre mostra quem era. Desligado é mais difícil." checked={settings.revealOnDeath} onChange={(v) => setS({ revealOnDeath: v })} />
+      <Switch label="Sons" hint="Uivo ao anoitecer, sino ao amanhecer, vento à noite." checked={settings.sound} onChange={(v) => setS({ sound: v })} />
       <Switch label="Narração por voz" hint="O celular lê os anúncios em voz alta." checked={settings.narration} onChange={(v) => setS({ narration: v })} />
       <Choice title="Votação" value={settings.voteMode} set={(voteMode) => setS({ voteMode })} options={[
         ['secreta', 'Secreta', 'Cada um vota no celular, escondido.'],
