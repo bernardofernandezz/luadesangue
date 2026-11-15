@@ -24,6 +24,12 @@ export function RulesStep({ settings, setS, n, roles }: { settings: Settings; se
         ['ninguem', 'Ninguém morre', 'Empatou, ninguém é linchado.'],
         ['sorteio', 'Sorteio', 'Um dos empatados é sorteado.'],
       ]} />
+      <Choice title="Defesa antes do linchamento" value={String(settings.defenseSeconds)} set={(v) => setS({ defenseSeconds: Number(v) })} options={[
+        ['0', 'Sem defesa', 'O mais votado é linchado na hora.'],
+        ['30', '30 segundos', 'Fala rápida, depois a vila confirma.'],
+        ['45', '45 segundos', 'O padrão. Depois a vila confirma.'],
+        ['60', '1 minuto', 'Defesa longa, depois a vila confirma.'],
+      ]} />
       <div className="rounded-3xl card p-4">
         <div className="flex justify-between"><span className="font-medium">Tempo de discussão</span><span className="text-moon tabular-nums">{clock(settings.discussionSeconds)}</span></div>
         <input type="range" min={30} max={600} step={30} value={settings.discussionSeconds} aria-label="Tempo de discussão"

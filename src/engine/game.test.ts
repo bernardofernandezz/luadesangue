@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { ackAnnounce, checkWin, createGame, current, drawRoles, hunterShoot, noteText, openVote, revealNext, startVote, submitNight, submitVote, type GameState, type NightInput } from './game'
+import { ackAnnounce, checkWin, confirmLynch, createGame, current, drawRoles, hunterShoot, noteText, openVote, revealNext, startVote, submitNight, submitVote, type GameState, type NightInput } from './game'
 import { isWolf, type RoleId } from './roles'
 import { defaultSettings, preset, type Settings } from './setup'
 
-const settings: Settings = { ...defaultSettings, randomRoles: false, narration: false }
+const settings: Settings = { ...defaultSettings, randomRoles: false, narration: false, defenseSeconds: 0 }
 const names = (n: number) => Array.from({ length: n }, (_, i) => `P${i}`)
 
 function setup(roles: RoleId[], extra: Partial<Settings> = {}): GameState {
@@ -173,5 +173,38 @@ describe('modos e consistência', () => {
     let s = night(setup(['lobisomem', 'aldeao', 'aldeao', 'aldeao']), { 0: { target: 1 } })
     s = ackAnnounce(s)
     expect(s.timeline.map((t) => t.text).join()).toContain('P1')
+  })
+})
+
+describe('defesa', () => {
+  const toVote = (extra: Partial<Settings>) => {
+    let s = night(setup(['lobisomem', 'aldeao', 'aldeao', 'aldeao', 'aldeao'], extra), {})
+    s = ackAnnounce(s); return startVote(s)
+  }
+
+  it('o mais votado se defende e a vila confirma', () => {
+    let s = toVote({ defenseSeconds: 45 })
+    while (s.phase === 'vote') s = submitVote(s, current(s).id === 0 ? 1 : 0)
+    expect(s.phase).toBe('defense')
+    expect(s.accused).toBe(0)
+    expect(dead(s)).toEqual([])
+    s = confirmLynch(s, true)
+    expect(dead(s)).toEqual([0])
+    expect(s.phase).toBe('announce')
+  })
+
+  it('a vila pode poupar o acusado', () => {
+    let s = toVote({ defenseSeconds: 45, voteMode: 'aberta' })
+    s = openVote(s, 2)
+    expect(s.phase).toBe('defense')
+    s = confirmLynch(s, false)
+    expect(dead(s)).toEqual([])
+    expect(s.accused).toBeNull()
+    expect(s.phase).toBe('announce')
+  })
+
+  it('sem defesa, lincha direto', () => {
+    const s = openVote(toVote({ defenseSeconds: 0 }), 2)
+    expect(dead(s)).toEqual([2])
   })
 })

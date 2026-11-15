@@ -1,8 +1,9 @@
 import { AnimatePresence, MotionConfig, motion, useIsPresent } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { ackAnnounce, createGame, hunterShoot, openVote, revealNext, startVote, submitNight, submitVote, type GameState } from '../engine/game'
+import { ackAnnounce, confirmLynch, createGame, hunterShoot, openVote, revealNext, startVote, submitNight, submitVote, type GameState } from '../engine/game'
 import { Announce, Hunter } from '../ui/game/Announce'
 import { Day } from '../ui/game/Day'
+import { Defense } from '../ui/game/Defense'
 import { Dealt, End } from '../ui/game/End'
 import { GameMenu } from '../ui/game/GameMenu'
 import { GameIsland } from '../ui/game/Island'
@@ -52,6 +53,7 @@ export default function App() {
       hunter: <Hunter s={game} onShoot={(t) => apply((g) => hunterShoot(g, t))} />,
       day: <Day s={game} onVote={() => apply(startVote)} onTick={setTimer} />,
       vote: <Vote s={game} onSecret={(t) => apply((g) => submitVote(g, t))} onOpen={(t) => apply((g) => openVote(g, t))} />,
+      defense: <Defense s={game} onDecide={(yes) => apply((g) => confirmLynch(g, yes))} onTick={setTimer} />,
       end: <End s={game} onAgain={start} onMenu={quit} />,
       dealt: <Dealt s={game} onAgain={start} onMenu={quit} />,
     }[game.phase]

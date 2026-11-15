@@ -13,10 +13,12 @@ export interface Settings {
   /** narrador = the app runs the match; cartas = it only deals roles and a human narrates. */
   mode: 'narrador' | 'cartas'
   tie: 'ninguem' | 'sorteio'
+  /** Seconds the most-voted player gets to defend before the village confirms. 0 skips the defense. */
+  defenseSeconds: number
 }
 
 export const defaultSettings: Settings = {
-  randomRoles: true, revealOnDeath: true, discussionSeconds: 120, voteMode: 'secreta', narration: true, mode: 'narrador', tie: 'ninguem',
+  randomRoles: true, revealOnDeath: true, discussionSeconds: 120, voteMode: 'secreta', narration: true, mode: 'narrador', tie: 'ninguem', defenseSeconds: 45,
 }
 
 export interface Lineup {

@@ -3,8 +3,8 @@ import { lineupProblems, rolesFor, wolfTarget, type Lineup, type Settings } from
 
 export interface Player { id: number; name: string; role: RoleId; alive: boolean }
 
-/** reveal → night → announce → (hunter) → day → vote → announce → night … → end. `dealt` ends a deal-only match. */
-type Phase = 'reveal' | 'night' | 'announce' | 'hunter' | 'day' | 'vote' | 'end' | 'dealt'
+/** reveal → night → announce → (hunter) → day → vote → (defense) → announce → night … → end. `dealt` ends a deal-only match. */
+type Phase = 'reveal' | 'night' | 'announce' | 'hunter' | 'day' | 'vote' | 'defense' | 'end' | 'dealt'
 
 /** What the current player sends on their night turn. Field meaning depends on the `NightAction` they were offered. */
 export interface NightInput { target?: number | null; target2?: number | null; use?: boolean }
@@ -46,6 +46,8 @@ export interface GameState {
   mentor: Record<number, number>
   items: number[]
   voteCancelled: boolean
+  /** Most-voted player, defending before the village confirms the lynch. */
+  accused: number | null
   /** Private messages shown at the player's next turn. */
   inbox: Record<number, string[]>
   announcements: Note[]
@@ -110,7 +112,7 @@ export function createGame(lineup: Lineup, seed = Date.now()): GameState {
   const { names, settings } = lineup
   const s: GameState = {
     players: [], settings, phase: 'reveal', day: 0, queue: [], cursor: 0, choices: [], votes: {}, used: [],
-    lovers: [], blade: null, mentor: {}, items: [], voteCancelled: false, inbox: {}, announcements: [],
+    lovers: [], blade: null, mentor: {}, items: [], voteCancelled: false, accused: null, inbox: {}, announcements: [],
     next: 'day', hunterQueue: [], log: [], timeline: [], winner: null, seed,
   }
   let roles = rolesFor(lineup)
@@ -463,15 +465,15 @@ export function submitVote(prev: GameState, target: number | null): GameState {
   const tiedPlayers = top.filter((t) => t !== SKIP)
   const tallies: Note[] = [...tally].sort((a, b) => b[1] - a[1]).map(([t, n]) => ({ kind: 'tally', id: t === SKIP ? null : t, votes: n }))
   s.announcements = []
-  if (top.length === 1 && top[0] !== SKIP) lynch(s, top[0])
+  log(s, `Votos: ${tallies.map((t) => noteText(s, t)).join(', ')}.`, 'vote')
+  s.phase = 'announce'
+  if (top.length === 1 && top[0] !== SKIP) accuse(s, top[0])
   else if (top.length > 1 && s.settings.tie === 'sorteio' && tiedPlayers.length) {
     const pick = pickOne(s, tiedPlayers)
     info(s, 'scale', `Empate! O sorteio escolheu ${name(s, pick)}.`)
-    lynch(s, pick)
+    accuse(s, pick)
   } else info(s, 'scale', top.length > 1 ? 'Empate! Ninguém foi linchado hoje.' : NO_LYNCH)
   s.announcements.unshift(...tallies)
-  log(s, `Votos: ${tallies.map((t) => noteText(s, t)).join(', ')}.`, 'vote')
-  s.phase = 'announce'
   return s
 }
 
@@ -480,8 +482,27 @@ export function openVote(prev: GameState, target: number | null): GameState {
   if (prev.phase !== 'vote') return prev
   const s = structuredClone(prev)
   s.announcements = []
-  if (isAlive(s, target)) lynch(s, target)
+  s.phase = 'announce'
+  if (isAlive(s, target)) accuse(s, target)
   else info(s, 'scale', NO_LYNCH)
+  return s
+}
+
+/** The vote's choice: defends first when the rules give a defense, otherwise is lynched right away. */
+function accuse(s: GameState, id: number) {
+  if (s.settings.defenseSeconds > 0) { s.accused = id; s.phase = 'defense' }
+  else lynch(s, id)
+}
+
+/** After the defense, the village (show of hands) confirms the lynch or spares the accused. */
+export function confirmLynch(prev: GameState, yes: boolean): GameState {
+  if (prev.phase !== 'defense' || prev.accused == null) return prev
+  const s = structuredClone(prev)
+  const id = s.accused!
+  s.accused = null
+  s.announcements = s.announcements.filter((n) => n.kind === 'tally')
+  if (yes) lynch(s, id)
+  else { info(s, 'scale', `${name(s, id)} se defendeu e foi poupado(a).`); log(s, `A vila poupou ${name(s, id)} após a defesa.`, 'vote') }
   s.phase = 'announce'
   return s
 }

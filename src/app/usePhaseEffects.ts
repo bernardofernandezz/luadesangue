@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { noteText, type GameState } from '../engine/game'
+import { noteText, player, type GameState } from '../engine/game'
 import type { Interlude } from '../ui/game/Transition'
 
 
@@ -8,6 +8,7 @@ function narrationFor(g: GameState): string | null {
   if (g.phase === 'announce') return g.announcements.map((n) => noteText(g, n)).join('. ')
   if (g.phase === 'night' && g.cursor === 0) return `Noite ${g.day}. A vila adormece.`
   if (g.phase === 'day') return 'Discussão aberta. Quem são os lobos?'
+  if (g.phase === 'defense' && g.accused != null) return `${player(g, g.accused).name} foi o mais votado. Você tem a palavra.`
   if (g.phase === 'end') return g.winner?.title ?? null
   return null
 }
@@ -62,7 +63,7 @@ export function usePhaseEffects(game: GameState | null) {
     return () => { done = true; document.removeEventListener('visibilitychange', take); lock?.release().catch(() => {}) }
   }, [playing])
 
-  const isDay = !!game && (['day', 'vote', 'hunter', 'announce'].includes(game.phase) || interlude?.kind === 'dawn') && interlude?.kind !== 'night'
+  const isDay = !!game && (['day', 'vote', 'defense', 'hunter', 'announce'].includes(game.phase) || interlude?.kind === 'dawn') && interlude?.kind !== 'night'
   useEffect(() => { document.body.classList.toggle('day', isDay) }, [isDay])
 
   return { interlude, endInterlude: useCallback(() => setInterlude(null), []) }

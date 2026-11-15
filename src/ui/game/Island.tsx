@@ -38,6 +38,10 @@ function contentFor(s: GameState, timer?: number): { compact: Compact | null; al
       compact: { icon: 'sun', text: `D${s.day}`, tone: 'text-solo' },
       alert: { key: `announce-${s.day}-${s.next}`, icon: 'skull', title: s.next === 'day' ? `Amanhecer · Dia ${s.day}` : 'A vila decidiu', text: s.announcements.map((n) => noteText(s, n)).join(' · ') },
     }
+    case 'defense': {
+      const t = timer ?? s.settings.defenseSeconds
+      return { compact: { icon: 'scale', text: clock(Math.max(0, t)), tone: t <= 10 ? 'text-lobos' : 'text-moon', pulse: t > 0 && t <= 10 }, alert: null }
+    }
     case 'vote': return { compact: { icon: 'scale', text: 'Voto' }, alert: null }
     case 'hunter': return { compact: { icon: 'bow', text: 'Tiro', tone: 'text-lobos' }, alert: null }
     case 'end': return {
