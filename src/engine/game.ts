@@ -60,6 +60,8 @@ export interface GameState {
   timeline: { day: number; text: string }[]
   winner: Winner | null
   seed: number
+  /** The seed the game started with: identifies the match (the live `seed` advances with every draw). */
+  startedAt: number
 }
 
 // mulberry32 on state: same seed, same game, so tests and undo are reproducible.
@@ -113,7 +115,7 @@ export function createGame(lineup: Lineup, seed = Date.now()): GameState {
   const s: GameState = {
     players: [], settings, phase: 'reveal', day: 0, queue: [], cursor: 0, choices: [], votes: {}, used: [],
     lovers: [], blade: null, mentor: {}, items: [], voteCancelled: false, accused: null, inbox: {}, announcements: [],
-    next: 'day', hunterQueue: [], log: [], timeline: [], winner: null, seed,
+    next: 'day', hunterQueue: [], log: [], timeline: [], winner: null, seed, startedAt: seed,
   }
   let roles = rolesFor(lineup)
   if (settings.randomRoles) roles = shuffle(s, drawRoles(shuffle(s, [...roles]), names.length))

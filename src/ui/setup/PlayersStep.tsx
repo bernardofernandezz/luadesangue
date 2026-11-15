@@ -9,7 +9,7 @@ import { Avatar, AvatarArt } from '../players/Avatar'
 import { AVATARS, randomAvatar, toThumb } from '../players/photos'
 import type { SetupData } from './data'
 
-export function PlayersStep({ data, set }: { data: SetupData; set: (p: Partial<SetupData>) => void }) {
+export function PlayersStep({ data, set, onScore }: { data: SetupData; set: (p: Partial<SetupData>) => void; onScore: () => void }) {
   const [draft, setDraft] = useState('')
   const [photoFor, setPhotoFor] = useState<string | null>(null)
   const { names, photos } = data
@@ -25,7 +25,10 @@ export function PlayersStep({ data, set }: { data: SetupData; set: (p: Partial<S
   }
   return (
     <section>
-      <h2 className="text-2xl font-semibold tracking-tight">Quem vai jogar?</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-2xl font-semibold tracking-tight">Quem vai jogar?</h2>
+        <Btn kind="ghost" size="sm" icon="trophy" onClick={onScore}>Placar</Btn>
+      </div>
       <p className="mt-1 text-sm text-muted">De {MIN_PLAYERS} a {MAX_PLAYERS} pessoas. Arraste para pôr na ordem em que estão sentadas.</p>
       <form className="mt-5 flex gap-2" onSubmit={(e) => { e.preventDefault(); add() }}>
         <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Nome do jogador" maxLength={16} aria-label="Nome do jogador" enterKeyHint="done"

@@ -1,13 +1,14 @@
 import type { GameState } from '../engine/game'
 import { defaultSettings } from '../engine/setup'
+import { emptyStats, type Stats } from './stats'
 import { defaultSetup, type SetupData } from '../ui/setup/data'
 
 const KEY = 'lua-de-sangue:v2'
 
-export interface Saved { setup: SetupData; game: GameState | null; history: GameState[]; tutorialSeen: boolean }
+export interface Saved { setup: SetupData; game: GameState | null; history: GameState[]; tutorialSeen: boolean; stats: Stats }
 
 /** Fills fields added after a save was written, so older saves keep working. */
-const upgradeGame = (g: GameState): GameState => ({ ...g, settings: { ...defaultSettings, ...g.settings }, timeline: g.timeline ?? [], accused: g.accused ?? null })
+const upgradeGame = (g: GameState): GameState => ({ ...g, settings: { ...defaultSettings, ...g.settings }, timeline: g.timeline ?? [], accused: g.accused ?? null, startedAt: g.startedAt ?? g.seed })
 
 // localStorage can be missing, blocked (private browsing) or full; the game must still run, just without saving.
 export function load(): Saved {
@@ -20,10 +21,11 @@ export function load(): Saved {
         setup: { ...defaultSetup, ...saved.setup, settings: { ...defaultSettings, ...saved.setup?.settings } },
         game: saved.game && upgradeGame(saved.game),
         history: (saved.history ?? []).map(upgradeGame),
+        stats: { ...emptyStats, ...saved.stats },
       }
     }
   } catch { /* unreadable or corrupt: start fresh */ }
-  return { setup: defaultSetup, game: null, history: [], tutorialSeen: false }
+  return { setup: defaultSetup, game: null, history: [], tutorialSeen: false, stats: emptyStats }
 }
 
 export function save(st: Saved) {

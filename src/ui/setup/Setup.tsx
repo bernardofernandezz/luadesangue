@@ -12,8 +12,8 @@ import { RulesStep } from './RulesStep'
 
 const STEPS = ['Jogadores', 'Papéis', 'Regras'] as const
 
-export function Setup({ data, onChange, onStart, onHelp, onGuide }: {
-  data: SetupData; onChange: (d: SetupData) => void; onStart: () => void; onHelp: () => void; onGuide: () => void
+export function Setup({ data, onChange, onStart, onHelp, onGuide, onScore }: {
+  data: SetupData; onChange: (d: SetupData) => void; onStart: () => void; onHelp: () => void; onGuide: () => void; onScore: () => void
 }) {
   const [step, setStep] = useState(0)
   const n = data.names.length
@@ -47,7 +47,7 @@ export function Setup({ data, onChange, onStart, onHelp, onGuide }: {
       </div>
       <AnimatePresence mode="wait">
         <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
-          {step === 0 && <PlayersStep data={data} set={set} />}
+          {step === 0 && <PlayersStep data={data} set={set} onScore={onScore} />}
           {step === 1 && <RolesStep data={data} set={set} setS={setS} />}
           {step === 2 && <RulesStep settings={data.settings} setS={setS} n={n} roles={roles} />}
         </motion.div>
