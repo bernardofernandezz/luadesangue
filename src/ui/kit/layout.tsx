@@ -7,7 +7,7 @@ export function Screen({ title, kicker, lead, hint, children, footer }: {
   title?: ReactNode; kicker?: ReactNode; lead?: ReactNode; hint?: ReactNode; children?: ReactNode; footer?: ReactNode
 }) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-5 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col pt-[max(1.25rem,calc(env(safe-area-inset-top)+.5rem))] pr-[max(1.25rem,env(safe-area-inset-right))] pl-[max(1.25rem,env(safe-area-inset-left))] pb-[max(1rem,env(safe-area-inset-bottom))]">
       <header className="flex min-h-11 flex-col items-center px-12 text-center">
         {lead && <div className="mb-3">{lead}</div>}
         {kicker && <p className="eyebrow text-muted">{kicker}</p>}
@@ -32,7 +32,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal>
           <motion.div onClick={(e) => e.stopPropagation()}
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-            className="glass glass-sheet mx-auto max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-[28px] border-t border-line bg-[#0a0a0a]/95 px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] ring-1 ring-line backdrop-blur-xl">
+            className="glass glass-sheet mx-auto max-h-[calc(100dvh-env(safe-area-inset-top)-1rem)] w-full max-w-md overflow-y-auto rounded-t-[28px] border-t border-line bg-[#0a0a0a]/95 px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] ring-1 ring-line backdrop-blur-xl">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
             <div className="mb-5 flex items-center justify-between gap-3">
               <h2 className="font-display text-2xl">{title}</h2>

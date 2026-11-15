@@ -44,7 +44,7 @@ export function Tutorial({ onDone }: { onDone: () => void }) {
   const s = slides[i]
   return (
     <motion.div className="fixed inset-0 z-50 flex flex-col bg-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 pt-[max(1.5rem,calc(env(safe-area-inset-top)+.5rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-end"><Btn kind="quiet" className="min-h-10" onClick={onDone}>Pular</Btn></div>
         <div className="relative flex flex-1 items-center overflow-hidden">
           <AnimatePresence mode="wait" custom={dir}>

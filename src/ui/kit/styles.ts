@@ -14,7 +14,7 @@ export const btnClass = (kind: BtnKind = 'primary', size: 'md' | 'sm' = 'md') =>
     size === 'sm' ? 'min-h-10 px-3 text-sm' : 'min-h-12 px-5 text-[15px]'} ${kinds[kind]}`
 
 /** Pinned to the top corners of the centered column. */
-export const corner = { left: 'fixed top-5 left-[max(1.25rem,calc(50%-14rem+1.25rem))] z-30', right: 'fixed top-5 right-[max(1.25rem,calc(50%-14rem+1.25rem))] z-30' }
+export const corner = { left: 'fixed top-[max(1.25rem,calc(env(safe-area-inset-top)+.5rem))] left-[max(1.25rem,env(safe-area-inset-left),calc(50%-14rem+1.25rem))] z-30', right: 'fixed top-[max(1.25rem,calc(env(safe-area-inset-top)+.5rem))] right-[max(1.25rem,env(safe-area-inset-right),calc(50%-14rem+1.25rem))] z-30' }
 
 /** Look of a selected option. */
 export const selectedClass = 'bg-white/[.07] ring-1 ring-white/60'
