@@ -17,7 +17,7 @@ export function Balance({ roles, n }: { roles: RoleId[]; n: number }) {
   const pos = Math.max(4, Math.min(96, 50 + b * 4))
   const verdict = draw ? `O jogo sorteia ${n} destes` : b > 4 ? 'Favorece a Vila' : b < -4 ? 'Favorece os Lobos' : 'Equilibrado'
   return (
-    <div className="rounded-2xl card p-3.5">
+    <div className="rounded-2xl border border-line bg-[#0b0b0b] p-3.5">
       <div className="flex items-center justify-between text-xs">
         <span className="font-medium"><span className={roles.length >= n ? 'text-vila' : 'text-solo'}>{roles.length}</span><span className="text-muted">/{n} papéis</span></span>
         <span className="text-muted">{verdict}</span>
@@ -44,13 +44,13 @@ export function RolesStep({ data, set, setS }: { data: SetupData; set: (p: Parti
 
   return (
     <section>
-      <div className="flex items-end justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0 flex-1 basis-64">
           <h2 className="text-2xl font-semibold tracking-tight">Papéis</h2>
           <p className="mt-1 text-sm text-muted">{settings.randomRoles ? 'Toque para adicionar, segure para ler. Pode escolher mais papéis que jogadores: o jogo sorteia quais entram.' : 'Escolha o papel de cada jogador.'}</p>
         </div>
         {settings.randomRoles && (
-          <div className="flex shrink-0 gap-2">
+          <div className="flex gap-2">
             <Btn kind="ghost" size="sm" onClick={() => set({ pool: pool.length >= ROLE_LIST.length ? [] : ROLE_LIST.map((r) => r.id) })}>{pool.length >= ROLE_LIST.length ? 'Limpar' : 'Todos'}</Btn>
             <Btn kind="ghost" size="sm" icon="sparkle" onClick={() => set({ pool: preset(names.length) })}>Sugerir</Btn>
           </div>

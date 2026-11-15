@@ -15,7 +15,7 @@ export function Screen({ title, kicker, lead, hint, children, footer }: {
         {hint && <p className="mt-2 max-w-xs text-sm leading-relaxed text-pretty text-muted">{hint}</p>}
       </header>
       <div className="mt-6 flex-1">{children}</div>
-      {footer && <div className="sticky bottom-0 -mx-5 mt-4 flex flex-col gap-2 bg-gradient-to-t from-bg via-bg/80 to-transparent px-5 pt-6 pb-1">{footer}</div>}
+      {footer && <div className="sticky bottom-0 -mx-5 mt-4 flex flex-col gap-2 bg-gradient-to-t from-bg via-bg via-80% to-transparent px-5 pt-8 pb-1">{footer}</div>}
     </div>
   )
 }
