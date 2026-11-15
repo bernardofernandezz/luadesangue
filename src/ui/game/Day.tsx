@@ -8,9 +8,11 @@ import { Screen } from '../kit/layout'
 import { PlayerGrid } from '../players/PlayerGrid'
 import { RoleBadge } from '../roles/RoleViews'
 
-export function Day({ s, onVote }: { s: GameState; onVote: () => void }) {
+export function Day({ s, onVote, onTick }: { s: GameState; onVote: () => void; onTick?: (left: number | undefined) => void }) {
   const total = s.settings.discussionSeconds
   const [left, setLeft] = useState(total)
+  useEffect(() => onTick?.(left), [left, onTick])
+  useEffect(() => () => onTick?.(undefined), [onTick]) // a stale 0 would flash "time's up" next day
   useEffect(() => {
     if (left === 10) navigator.vibrate?.(80)
     if (left <= 0) { navigator.vibrate?.([200, 100, 200]); return }

@@ -5,6 +5,7 @@ import { Announce, Hunter } from '../ui/game/Announce'
 import { Day } from '../ui/game/Day'
 import { Dealt, End } from '../ui/game/End'
 import { GameMenu } from '../ui/game/GameMenu'
+import { GameIsland } from '../ui/game/Island'
 import { Night } from '../ui/game/Night'
 import { Reveal } from '../ui/game/Reveal'
 import { Transition } from '../ui/game/Transition'
@@ -24,6 +25,7 @@ export default function App() {
   const [st, setSt] = useState<Saved>(load)
   const [menu, setMenu] = useState(false)
   const [guide, setGuide] = useState(false)
+  const [timer, setTimer] = useState<number>()
   const [tutorial, setTutorial] = useState(!st.tutorialSeen)
   const { game, setup } = st
   const { interlude, endInterlude } = usePhaseEffects(game)
@@ -48,7 +50,7 @@ export default function App() {
       night: <Night s={game} onChoose={(c) => apply((g) => submitNight(g, c))} />,
       announce: <Announce s={game} onNext={() => apply(ackAnnounce)} />,
       hunter: <Hunter s={game} onShoot={(t) => apply((g) => hunterShoot(g, t))} />,
-      day: <Day s={game} onVote={() => apply(startVote)} />,
+      day: <Day s={game} onVote={() => apply(startVote)} onTick={setTimer} />,
       vote: <Vote s={game} onSecret={(t) => apply((g) => submitVote(g, t))} onOpen={(t) => apply((g) => openVote(g, t))} />,
       end: <End s={game} onAgain={start} onMenu={quit} />,
       dealt: <Dealt s={game} onAgain={start} onMenu={quit} />,
@@ -66,6 +68,7 @@ export default function App() {
 
         {game && (
           <>
+            <GameIsland s={game} timer={timer} />
             <IconBtn name="menu" label="Menu da partida" onClick={() => setMenu(true)} className={corner.right} />
             <GameMenu game={game} open={menu} canUndo={st.history.length > 0} onClose={() => setMenu(false)}
               onUndo={undo} onGuide={() => setGuide(true)} onHelp={() => setTutorial(true)} onQuit={quit} />
