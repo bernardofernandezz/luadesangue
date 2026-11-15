@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
-import { Btn, Dots } from './components'
-import { Icon, RoleIcon } from './icons'
+import { Btn } from '../kit/controls'
+import { Dots } from '../kit/layout'
+import { Icon } from '../kit/icons'
+import { RoleIcon } from '../roles/RoleIcon'
 
 const slides = [
   { icon: <Icon name="phone" size={44} />, title: 'Um celular, todos jogam', text: 'Sentem-se em roda. O app chama cada um pelo nome. Quando for a sua vez, pegue o celular e segure o círculo para ver sua tela, sem ninguém olhar.' },

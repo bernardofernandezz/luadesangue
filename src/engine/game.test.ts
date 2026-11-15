@@ -1,21 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { ackAnnounce, checkWin, createGame, drawRoles, hunterShoot, noteText, openVote, revealNext, startVote, submitNight, submitVote, type GameState, type NightChoice, type Settings } from './game'
-import { isWolf, preset, type RoleId } from './roles'
+import { ackAnnounce, checkWin, createGame, current, drawRoles, hunterShoot, noteText, openVote, revealNext, startVote, submitNight, submitVote, type GameState, type NightInput } from './game'
+import { isWolf, type RoleId } from './roles'
+import { defaultSettings, preset, type Settings } from './setup'
 
-const settings: Settings = { randomRoles: false, revealOnDeath: true, discussionSeconds: 60, voteMode: 'secreta', narration: false, mode: 'narrador', tie: 'ninguem' }
+const settings: Settings = { ...defaultSettings, randomRoles: false, narration: false }
+const names = (n: number) => Array.from({ length: n }, (_, i) => `P${i}`)
 
 function setup(roles: RoleId[], extra: Partial<Settings> = {}): GameState {
-  let s = createGame(roles.map((_, i) => `P${i}`), roles, { ...settings, ...extra }, 42)
+  const ns = names(roles.length)
+  let s = createGame({ names: ns, pool: roles, fixed: Object.fromEntries(ns.map((n, i) => [n, roles[i]])), settings: { ...settings, ...extra } }, 42)
   while (s.phase === 'reveal') s = revealNext(s)
   return s
 }
 
-/** Plays a whole night; actors without an entry make an ignored fake pick. */
-function night(s: GameState, picks: Record<number, Omit<NightChoice, 'actor'>>): GameState {
-  while (s.phase === 'night') {
-    const actor = s.queue[s.cursor]
-    s = submitNight(s, { actor, ...(picks[actor] ?? {}) })
-  }
+function night(s: GameState, picks: Record<number, NightInput>): GameState {
+  while (s.phase === 'night') s = submitNight(s, picks[current(s).id] ?? {})
   return s
 }
 
@@ -98,7 +97,7 @@ describe('dia e vitória', () => {
     let s = night(setup(['lobisomem', 'prefeito', 'aldeao', 'aldeao', 'aldeao', 'aldeao']), {})
     s = ackAnnounce(s); s = startVote(s)
     const votes: Record<number, number> = { 0: 2, 1: 0, 2: 3, 3: 2, 4: 0, 5: 3 }
-    while (s.phase === 'vote') s = submitVote(s, s.queue[s.cursor], votes[s.queue[s.cursor]])
+    while (s.phase === 'vote') s = submitVote(s, votes[current(s).id])
     expect(dead(s)).toEqual([0])
   })
 
@@ -106,7 +105,7 @@ describe('dia e vitória', () => {
     let s = night(setup(['lobisomem', 'aldeao', 'aldeao', 'aldeao']), {})
     s = ackAnnounce(s); s = startVote(s)
     const votes: Record<number, number> = { 0: 1, 1: 0, 2: 1, 3: 0 }
-    while (s.phase === 'vote') s = submitVote(s, s.queue[s.cursor], votes[s.queue[s.cursor]])
+    while (s.phase === 'vote') s = submitVote(s, votes[current(s).id])
     expect(dead(s)).toEqual([])
   })
 
@@ -117,7 +116,7 @@ describe('dia e vitória', () => {
   })
 
   it('lobos vencem com paridade', () => {
-    const s = night(setup(['lobisomem', 'aldeao', 'aldeao']), { 0: { target: 1 } })
+    const s = night(setup(['lobisomem', 'lobo_alfa', 'aldeao', 'aldeao', 'aldeao']), { 0: { target: 2 }, 1: { target: 2 } })
     expect(checkWin(s)?.title).toContain('Lobos')
   })
 
@@ -133,7 +132,7 @@ describe('dia e vitória', () => {
     let s = night(setup(['lobisomem', 'aldeao', 'aldeao', 'aldeao'], { tie: 'sorteio' }), {})
     s = ackAnnounce(s); s = startVote(s)
     const votes: Record<number, number> = { 0: 1, 1: 0, 2: 1, 3: 0 }
-    while (s.phase === 'vote') s = submitVote(s, s.queue[s.cursor], votes[s.queue[s.cursor]])
+    while (s.phase === 'vote') s = submitVote(s, votes[current(s).id])
     expect(dead(s)).toHaveLength(1)
     expect([0, 1]).toContain(dead(s)[0])
   })
@@ -143,7 +142,7 @@ describe('modos e consistência', () => {
   it('sorteia papéis quando há mais papéis que jogadores', () => {
     const pool: RoleId[] = ['lobisomem', 'lobo_alfa', 'lobo_sombra', 'lobo_uivante', 'vidente', 'medico', 'bruxa', 'cacador', 'tolo', 'assassino', 'prefeito']
     for (let seed = 1; seed <= 30; seed++) {
-      const g = createGame(['a', 'b', 'c', 'd', 'e', 'f'], pool, { ...settings, randomRoles: true }, seed)
+      const g = createGame({ names: names(6), pool, fixed: {}, settings: { ...settings, randomRoles: true } }, seed)
       const roles = g.players.map((p) => p.role)
       expect(roles).toHaveLength(6)
       expect(new Set(roles).size).toBe(6)
@@ -159,12 +158,14 @@ describe('modos e consistência', () => {
     expect(s.phase).toBe('dealt')
   })
 
-  it('alvo morto é ignorado', () => {
-    let s = night(setup(['lobisomem', 'aldeao', 'aldeao', 'aldeao', 'aldeao']), { 0: { target: 1 } })
-    s = ackAnnounce(s); s = startVote(s); s = openVote(s, 1); s = ackAnnounce(s)
-    expect(dead(s)).toEqual([1])
-    s = night(s, { 0: { target: 1 } })
-    expect(s.choices[0].target).toBeNull()
+  it('recusa ações inválidas', () => {
+    const wolfOnWolf = night(setup(['lobisomem', 'lobo_alfa', 'aldeao', 'aldeao', 'aldeao']), { 0: { target: 1 }, 1: { target: 1 } })
+    expect(dead(wolfOnWolf)).toEqual([])
+    expect(submitVote(wolfOnWolf, 2)).toBe(wolfOnWolf)
+
+    let s = ackAnnounce(wolfOnWolf); s = startVote(s)
+    const votes: Record<number, number> = { 0: 0, 1: 2, 2: 0, 3: 1, 4: 1 }
+    while (s.phase === 'vote') s = submitVote(s, votes[current(s).id])
     expect(dead(s)).toEqual([1])
   })
 

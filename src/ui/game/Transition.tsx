@@ -1,9 +1,10 @@
 import { motion } from 'motion/react'
 import { useEffect } from 'react'
-import { Icon } from './icons'
+import { Icon } from '../kit/icons'
 
-/** Short cinematic between night and day. Tap to skip. */
-export function Transition({ kind, day, onDone }: { kind: 'night' | 'dawn'; day: number; onDone: () => void }) {
+export interface Interlude { kind: 'night' | 'dawn'; day: number }
+
+export function Transition({ kind, day, onDone }: Interlude & { onDone: () => void }) {
   useEffect(() => { const t = setTimeout(onDone, 2400); return () => clearTimeout(t) }, [onDone])
   const night = kind === 'night'
   const stars = night ? Array.from({ length: 28 }, (_, i) => ({ x: (i * 37) % 100, y: (i * 53) % 60, d: (i % 7) * 0.12 })) : []
@@ -21,7 +22,7 @@ export function Transition({ kind, day, onDone }: { kind: 'night' | 'dawn'; day:
         <Icon name={night ? 'moon' : 'sun'} size={88} className="relative" />
       </motion.div>
       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-        className="mt-10 text-[11px] font-mono font-medium tracking-[.14em] text-muted uppercase">{night ? `Noite ${day}` : `Dia ${day}`}</motion.p>
+        className="mt-10 eyebrow text-muted">{night ? `Noite ${day}` : `Dia ${day}`}</motion.p>
       <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
         className="mt-3 font-display text-5xl text-gradient leading-tight">{night ? 'A vila adormece' : 'Amanhecer'}</motion.h1>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }} className="mt-3 max-w-64 text-center text-sm text-muted">

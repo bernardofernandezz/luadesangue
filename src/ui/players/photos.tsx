@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, type ReactNode } from 'react'
 
 const W = '#fff'
 const K = '#111'
@@ -57,38 +57,21 @@ export const AVATARS: { id: string; name: string; bg: [string, string]; art: Rea
 ]
 
 const byId = Object.fromEntries(AVATARS.map((a) => [a.id, a]))
+/** Unknown or missing photos fall back to the first avatar. */
+export const avatarFor = (photo: string) => byId[photo.slice(2)] ?? AVATARS[0]
 
 /** Player photos by name: `a:<avatar id>` or a `data:` image URL. */
 export const PhotoContext = createContext<Record<string, string>>({})
-export const usePhoto = (name: string) => useContext(PhotoContext)[name]
 
-/** Stable pick for players without a saved choice. */
-export function fallbackAvatar(name: string) {
-  let h = 0
-  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) | 0
-  return `a:${AVATARS[Math.abs(h) % AVATARS.length].id}`
-}
-
-/** A random avatar not yet used by anyone, if possible. */
 export function randomAvatar(taken: string[]) {
   const free = AVATARS.filter((a) => !taken.includes(`a:${a.id}`))
   const list = free.length ? free : AVATARS
   return `a:${list[Math.floor(Math.random() * list.length)].id}`
 }
 
-export function AvatarArt({ photo, size }: { photo: string; size: number }) {
-  if (photo.startsWith('data:')) return <img src={photo} alt="" width={size} height={size} className="size-full rounded-full object-cover" />
-  const a = byId[photo.slice(2)] ?? AVATARS[0]
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden className="rounded-full"
-      style={{ background: `linear-gradient(135deg, ${a.bg[0]}, ${a.bg[1]})` }}>
-      <g transform="translate(5 7) scale(.84)">{a.art}</g>
-    </svg>
-  )
-}
-
 /** Center-crops and shrinks a picked image so 20 photos still fit in localStorage. */
-export async function toThumb(file: File, px = 192): Promise<string> {
+export async function toThumb(file: File): Promise<string> {
+  const px = 192
   const bmp = await createImageBitmap(file)
   const s = Math.min(bmp.width, bmp.height)
   const c = document.createElement('canvas')
