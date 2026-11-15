@@ -1,35 +1,19 @@
-# React + TypeScript + Vite
+# Lua de Sangue
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Jogo de Lobisomem (dedução social) para jogar presencialmente com um único celular, offline.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+npm install
+npm run dev     # desenvolvimento
+npm test        # regras do jogo
+npm run build   # checa tipos e gera o PWA em dist/
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
-# luadesangue
-# luadesangue
-# luadesangue
+## Estrutura
+
+- `src/engine/`: regras puras, sem React. `roles.ts` (catálogo de papéis), `setup.ts` (montagem da partida), `game.ts` (fases, ações noturnas, votação, vitória).
+- `src/app/`: casca do app. Estado, salvamento local (`storage.ts`) e efeitos de cada fase (narração, transições).
+- `src/ui/kit/`: componentes genéricos (botões, telas, folhas, ícones).
+- `src/ui/players/`, `roles/`, `setup/`, `game/`, `help/`: telas e peças por funcionalidade.
+
+Para criar um papel: adicione-o em `engine/roles.ts` (textos e traços), diga em `nightAction` (`engine/game.ts`) o que ele pode fazer à noite e implemente o efeito em `resolveNight`. Desenhe o ícone em `ui/roles/RoleIcon.tsx`.
