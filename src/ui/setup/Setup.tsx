@@ -26,7 +26,7 @@ export function Setup({ data, onChange, onStart, onHelp, onGuide }: {
 
   return (
     <Screen
-      lead={<p className="font-display text-3xl leading-tight italic text-gradient">Lua de Sangue</p>}
+      lead={<div className="flex items-center gap-2.5"><img src="/icon-192.png" alt="" className="size-9 rounded-[10px]" /><p className="font-display text-3xl leading-tight italic text-gradient">Lua de Sangue</p></div>}
       footer={
         <>
           {step === 1 && <Balance roles={roles} n={n} />}
