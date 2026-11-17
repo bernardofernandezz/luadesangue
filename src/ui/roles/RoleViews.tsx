@@ -43,9 +43,11 @@ function RoleCard({ role, extra, stagger = 0 }: { role: RoleId; extra?: ReactNod
           ))}
         </ol>
       </motion.section>
-      <motion.section {...item(2)} className="flex gap-3 rounded-3xl border border-line bg-white/[.03] p-5 text-[15px] leading-relaxed">
-        <Icon name="sparkle" size={18} className="mt-0.5 shrink-0 text-moon" />
-        <p><strong className="text-moon">Dica:</strong> {r.tip}</p>
+      <motion.section {...item(2)} className="rounded-3xl border border-line bg-white/[.03] p-5 text-[15px] leading-relaxed">
+        <h3 className="flex items-center gap-2 eyebrow text-moon"><Icon name="sparkle" size={14} />{r.tips.length > 1 ? 'Dicas' : 'Dica'}</h3>
+        <ul className="mt-3 space-y-2">
+          {r.tips.map((tip, i) => <li key={i} className="flex gap-2"><span className="text-moon" aria-hidden>•</span><span>{tip}</span></li>)}
+        </ul>
       </motion.section>
       {extra && <motion.div {...item(3)}>{extra}</motion.div>}
     </div>

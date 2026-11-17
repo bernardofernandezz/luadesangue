@@ -76,12 +76,12 @@ function ShareResult({ s }: { s: GameState }) {
 }
 
 /** End of a deal-only match: a human narrator takes over. */
-export function Dealt({ s, onAgain, onMenu }: Props) {
+export function Dealt({ s, onAgain, onMenu, onContinue }: Props & { onContinue: () => void }) {
   const [open, setOpen] = useState(false)
   return (
     <Screen lead={<LeadIcon name="check" />} kicker="Distribuição concluída" title="O narrador assume daqui"
-      hint="Todos já viram suas cartas. Devolva o celular para quem vai narrar."
-      footer={<><Btn onClick={onAgain}>Distribuir de novo</Btn><Btn kind="quiet" onClick={onMenu}>Mudar jogadores ou papéis</Btn></>}>
+      hint="Todos já viram suas cartas. O narrador pode conduzir sozinho ou seguir pelo app, que mostra o que ler."
+      footer={<><Btn onClick={onContinue}>Seguir com o app narrando em silêncio</Btn><Btn kind="ghost" onClick={onAgain}>Distribuir de novo</Btn><Btn kind="quiet" onClick={onMenu}>Mudar jogadores ou papéis</Btn></>}>
       {open ? <Roster players={s.players} />
         : <Btn kind="ghost" icon="users" className="w-full" onClick={() => confirm('Só o narrador deve ver. Mostrar todos os papéis?') && setOpen(true)}>Mostrar todos os papéis ao narrador</Btn>}
     </Screen>

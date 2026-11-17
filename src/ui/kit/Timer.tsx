@@ -4,8 +4,8 @@ import { clock } from './format'
 import { tick } from './sound'
 
 /** Seconds left of a countdown that buzzes at 10s and at the end. Reports each tick to `onTick` (the island shows it). */
-export function useCountdown(total: number, onTick?: (left: number | undefined) => void) {
-  const [left, setLeft] = useState(total)
+export function useCountdown(total: number, onTick?: (left: number | undefined) => void, start = total) {
+  const [left, setLeft] = useState(start)
   useEffect(() => {
     if (left === 10) navigator.vibrate?.(80)
     if (left > 0 && left <= 10) tick()

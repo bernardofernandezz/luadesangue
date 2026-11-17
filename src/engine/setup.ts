@@ -10,8 +10,10 @@ export interface Settings {
   discussionSeconds: number
   voteMode: 'secreta' | 'aberta'
   narration: boolean
-  /** narrador = the app runs the match; cartas = it only deals roles and a human narrates. */
-  mode: 'narrador' | 'cartas'
+  /** narrador = the app runs the match and speaks; humano = it runs the match silently and a person reads its lines; cartas = it only deals roles. */
+  mode: 'narrador' | 'humano' | 'cartas'
+  /** What the secret vote result shows: nothing but the verdict, the counts, or who voted for whom. */
+  voteReveal: 'nada' | 'contagem' | 'nomes'
   tie: 'ninguem' | 'sorteio'
   /** Seconds the most-voted player gets to defend before the village confirms. 0 skips the defense. */
   defenseSeconds: number
@@ -20,6 +22,7 @@ export interface Settings {
 
 export const defaultSettings: Settings = {
   randomRoles: true, revealOnDeath: true, discussionSeconds: 120, voteMode: 'secreta', narration: true, mode: 'narrador', tie: 'ninguem', defenseSeconds: 45, sound: true,
+  voteReveal: 'nomes',
 }
 
 export interface Lineup {
@@ -51,8 +54,8 @@ export const balance = (roles: RoleId[]) => roles.reduce((sum, r) => sum + ROLES
 
 export function preset(n: number): RoleId[] {
   const wolves: RoleId[] = ['lobisomem', 'lobo_alfa', 'lobo_sombra', 'lobo_uivante']
-  const solos: RoleId[] = n >= 12 ? ['tolo', 'assassino'] : n >= 9 ? ['tolo'] : []
-  const specials: RoleId[] = ['vidente', 'medico', 'cacador', 'bruxa', 'cupido', 'ferreiro', 'rastreador', 'guarda_costas', 'herdeiro', 'prefeito', 'faroleiro', 'sonambulo']
+  const solos: RoleId[] = n >= 12 ? ['tolo', 'assassino', 'cacador_cabecas'] : n >= 10 ? ['tolo', 'cacador_cabecas'] : n >= 9 ? ['tolo'] : []
+  const specials: RoleId[] = ['vidente', 'medico', 'cacador', 'bruxa', 'vingador', 'cupido', 'vidente_aura', 'ferreiro', 'sacerdote', 'rastreador', 'guarda_costas', 'dama_vermelho', 'herdeiro', 'prefeito', 'amaldicoado', 'faroleiro', 'sonambulo']
   const out: RoleId[] = []
   for (let i = 0; i < wolfTarget(n); i++) out.push(wolves[i] ?? 'lobisomem')
   out.push(...solos)

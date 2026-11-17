@@ -48,6 +48,7 @@ function NoteView({ s, n, max, delay }: { s: GameState; n: Note; max: number; de
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-raised">
             <motion.div className="h-full rounded-full bg-moon" initial={{ width: 0 }} animate={{ width: `${(n.votes / max) * 100}%` }} transition={{ delay: delay + 0.2, duration: 0.6 }} />
           </div>
+          {n.voters && <p className="mt-1.5 text-xs text-muted">{n.voters.map((v) => player(s, v).name).join(', ')}</p>}
         </div>
       </div>
     )
@@ -77,10 +78,10 @@ export function Hunter({ s, onShoot }: { s: GameState; onShoot: (target: number 
   const [t, setT] = useState<number | null>(null)
   return (
     <Screen lead={<RoleBadge role={h.role} size={64} pulse />} kicker="Último suspiro" title={`${h.name} · ${ROLES[h.role].name}`}
-      hint={`${h.name}, antes de cair você pode atirar uma flecha. Quem você escolher morre na hora.`}
-      footer={<ConfirmBar kind="danger" disabled={t == null} label="Atirar" onConfirm={() => onShoot(t)}
-        summary={t != null && <>Flecha em <b className="text-lobos">{player(s, t).name}</b></>}
-        secondary={<Btn kind="quiet" onClick={() => onShoot(null)}>Não atirar</Btn>} />}>
+      hint={`${h.name}, antes de cair você pode levar alguém junto. Quem você escolher morre na hora.`}
+      footer={<ConfirmBar kind="danger" disabled={t == null} label="Levar junto" onConfirm={() => onShoot(t)}
+        summary={t != null && <>Levar <b className="text-lobos">{player(s, t).name}</b></>}
+        secondary={<Btn kind="quiet" onClick={() => onShoot(null)}>Não levar ninguém</Btn>} />}>
       <PlayerGrid players={s.players} selected={[t]} onSelect={setT} can={(o) => o.id !== h.id} />
     </Screen>
   )

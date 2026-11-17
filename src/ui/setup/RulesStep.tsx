@@ -10,17 +10,27 @@ export function RulesStep({ settings, setS, n, roles }: { settings: Settings; se
       <h2 className="text-2xl font-semibold tracking-tight">Regras da partida</h2>
       <p className="-mt-1 pb-2 text-sm text-muted">Dá para deixar como está. Tudo pode mudar na próxima partida.</p>
       <Choice title="Modo" value={settings.mode} set={(mode) => setS({ mode })} options={[
-        ['narrador', 'Narrador automático', 'O app conduz noite, dia e votação.'],
-        ['cartas', 'Só distribuir papéis', 'Cada um vê sua carta; um narrador humano conduz.'],
+        ['narrador', 'Narrador automático', 'O app conduz noite, dia e votação, com voz e sons.'],
+        ['humano', 'Narrador humano', 'O app conduz em silêncio; uma pessoa lê o roteiro em voz alta, sem saber os papéis.'],
+        ['cartas', 'Só distribuir papéis', 'Cada um vê sua carta e o app para; dá para seguir pelo app depois, se quiserem.'],
       ]} />
-      {settings.mode === 'narrador' && <>
+      {settings.mode !== 'cartas' && <>
       <Switch label="Revelar papel ao morrer" hint="Quem morre mostra quem era. Desligado é mais difícil." checked={settings.revealOnDeath} onChange={(v) => setS({ revealOnDeath: v })} />
+      {settings.mode === 'narrador' && <>
       <Switch label="Sons" hint="Uivo ao anoitecer, sino ao amanhecer, vento à noite." checked={settings.sound} onChange={(v) => setS({ sound: v })} />
       <Switch label="Narração por voz" hint="O celular lê os anúncios em voz alta." checked={settings.narration} onChange={(v) => setS({ narration: v })} />
+      </>}
       <Choice title="Votação" value={settings.voteMode} set={(voteMode) => setS({ voteMode })} options={[
         ['secreta', 'Secreta', 'Cada um vota no celular, escondido.'],
         ['aberta', 'Aberta', 'Mão levantada; o anfitrião marca.'],
       ]} />
+      {settings.voteMode === 'secreta' && <>
+      <Choice title="Resultado da votação" value={settings.voteReveal} set={(voteReveal) => setS({ voteReveal })} options={[
+        ['nada', 'Só o veredito', 'Ninguém vê quantos votos cada um teve.'],
+        ['contagem', 'Quantidade de votos', 'Mostra quantos votos cada um recebeu.'],
+        ['nomes', 'Quem votou em quem', 'Mostra os votos e quem votou em cada um.'],
+      ]} />
+      </>}
       <Choice title="Empate na votação" value={settings.tie} set={(tie) => setS({ tie })} options={[
         ['ninguem', 'Ninguém morre', 'Empatou, ninguém é linchado.'],
         ['sorteio', 'Sorteio', 'Um dos empatados é sorteado.'],

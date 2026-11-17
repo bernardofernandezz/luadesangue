@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, type ReactNode } from 'react'
-import { investigate, nightAction, packOf, player, type GameState, type NightAction, type NightInput, type Player } from '../../engine/game'
-import { ROLES, isWolf } from '../../engine/roles'
+import { auraOf, nightAction, packOf, peekAt, player, sameTeam, type GameState, type NightAction, type NightInput, type Player } from '../../engine/game'
+import { ROLES, isWolf, type RoleId } from '../../engine/roles'
+import { TEAM_LABEL, teamText } from '../roles/teamStyles'
 import { Icon, type UiIconName } from '../kit/icons'
 import { RoleIcon } from '../roles/RoleIcon'
 import { selectedClass } from '../kit/styles'
@@ -51,28 +52,35 @@ const toggle = (cur: number | null, set: (v: number | null) => void) => (id: num
 
 function PickTurn({ s, p, a, onChoose }: TurnProps<'pick'>) {
   const [t, setT] = useState<number | null>(null)
+  const [t2, setT2] = useState<number | null>(null)
   const [use, setUse] = useState(false)
   const [peeked, setPeeked] = useState(false)
   const def = ROLES[p.role]
   const wolf = isWolf(p.role)
   const pack = packOf(s, p.id)
-  const target = t != null && <b className={wolf ? 'text-lobos' : 'text-text'}>{player(s, t).name}</b>
+  // Incendiário: up to two picks, or the power instead of picking.
+  const two = a.max === 2
+  const instead = two && use
+  const pick2 = (id: number) => (t === id ? setT(null) : t2 === id ? setT2(null) : t == null ? setT(id) : t2 == null ? setT2(id) : undefined)
+  const nm = (id: number) => <b className={wolf ? 'text-lobos' : 'text-text'}>{player(s, id).name}</b>
   const summary = peeked ? null
-    : t != null ? <>{def.verb} {target}{use && def.power && ` · ${def.power.summary}`}</>
+    : instead ? def.power?.summary
+    : t != null ? <>{def.verb} {nm(t)}{two && t2 != null && <> e {nm(t2)}</>}{use && def.power && ` · ${def.power.summary}`}</>
     : a.optional ? def.skip : null
-  const confirm = a.peek && !peeked ? () => setPeeked(true) : () => onChoose({ target: t, use })
+  const confirm = a.peek && !peeked ? () => setPeeked(true) : () => onChoose(instead ? { use } : { target: t, target2: t2, use: use && (!a.powerTargets || (t != null && a.powerTargets.includes(t))) })
   return (
-    <Turn s={s} p={p} footer={<ConfirmBar summary={summary} disabled={t == null && !a.optional} label={a.peek && !peeked ? 'Revelar' : 'Confirmar e esconder'} onConfirm={confirm} />}>
+    <Turn s={s} p={p} footer={<ConfirmBar summary={summary} disabled={t == null && !a.optional && !instead} label={a.peek && !peeked ? 'Revelar' : 'Confirmar e esconder'} onConfirm={confirm} />}>
       {a.note && <p className="mb-4 text-center text-sm text-muted">{a.note}</p>}
       {pack.length > 0 && <p className="mb-4 text-center text-sm text-muted">Matilha: <span className="text-lobos">{pack.map((w) => w.name).join(', ')}</span></p>}
       <AnimatePresence mode="wait">
         {peeked && t != null
-          ? <SeerResult key="r" p={player(s, t)} wolf={investigate(s, t)} />
-          : <motion.div key="g" exit={{ opacity: 0, scale: 0.97 }}>
-              <PlayerGrid players={s.players} selected={[t]} onSelect={a.optional ? toggle(t, setT) : setT} can={pickable(a.targets)} marks={a.marks} />
+          ? a.aura ? <AuraResult key="r" p={player(s, t)} aura={auraOf(s, t)} /> : <SeerResult key="r" p={player(s, t)} role={peekAt(s, p.id, t)} />
+          : !instead && <motion.div key="g" exit={{ opacity: 0, scale: 0.97 }}>
+              <PlayerGrid players={s.players} selected={[t, two ? t2 : null]} onSelect={two ? pick2 : a.optional ? toggle(t, setT) : setT}
+                can={pickable(a.targets)} marks={a.marks} allowDead={a.dead} />
             </motion.div>}
       </AnimatePresence>
-      {a.power && def.power && <Power icon={<RoleIcon role={p.role} size={20} />} title={def.power.title} text={def.power.text} v={use} set={setUse} />}
+      {a.power && def.power && (!a.powerTargets || (t != null && a.powerTargets.includes(t))) && <Power icon={<RoleIcon role={p.role} size={20} />} title={def.power.title} text={def.power.text} v={use} set={setUse} />}
     </Turn>
   )
 }
@@ -80,13 +88,54 @@ function PickTurn({ s, p, a, onChoose }: TurnProps<'pick'>) {
 function PairTurn({ s, p, a, onChoose }: TurnProps<'pair'>) {
   const [t, setT] = useState<number | null>(null)
   const [t2, setT2] = useState<number | null>(null)
+  const [peeked, setPeeked] = useState(false)
   const pick = (id: number) => (t === id ? setT(null) : t2 === id ? setT2(null) : t == null ? setT(id) : setT2(id))
-  const nm = (id: number) => <b className="text-love">{player(s, id).name}</b>
+  const nm = (id: number) => <b className={a.compare ? 'text-text' : 'text-love'}>{player(s, id).name}</b>
+  const comparing = a.compare && !peeked
   return (
-    <Turn s={s} p={p} footer={<ConfirmBar disabled={t == null || t2 == null} label="Confirmar e esconder" onConfirm={() => onChoose({ target: t, target2: t2 })}
-      summary={t != null && <>Unir {nm(t)}{t2 != null ? <> e {nm(t2)}</> : ' e…'}</>} />}>
-      <PlayerGrid players={s.players} selected={[t, t2]} onSelect={pick} can={pickable(a.targets)} />
+    <Turn s={s} p={p} footer={<ConfirmBar disabled={t == null || t2 == null} label={comparing ? 'Comparar' : 'Confirmar e esconder'}
+      onConfirm={comparing ? () => setPeeked(true) : () => onChoose({ target: t, target2: t2 })}
+      summary={!peeked && t != null && <>{a.compare ? 'Comparar' : 'Unir'} {nm(t)}{t2 != null ? <> e {nm(t2)}</> : ' e…'}</>} />}>
+      <AnimatePresence mode="wait">
+        {peeked && t != null && t2 != null
+          ? <CompareResult key="r" a={player(s, t)} b={player(s, t2)} same={sameTeam(s, t, t2)} />
+          : <motion.div key="g" exit={{ opacity: 0, scale: 0.97 }}>
+              <PlayerGrid players={s.players} selected={[t, t2]} onSelect={pick} can={pickable(a.targets)} />
+            </motion.div>}
+      </AnimatePresence>
     </Turn>
+  )
+}
+
+function CompareResult({ a, b, same }: { a: Player; b: Player; same: boolean }) {
+  return (
+    <motion.div initial={{ rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 140, damping: 16 }}
+      style={{ transformPerspective: 800 }} role="status" className={`flex flex-col items-center rounded-3xl p-8 text-center ring-1 ${same ? 'bg-vila/10 ring-vila/30' : 'bg-lobos/12 ring-lobos/40'}`}>
+      <div className="flex gap-3"><Avatar name={a.name} size={64} /><Avatar name={b.name} size={64} /></div>
+      <p className="mt-4 text-lg font-medium">{a.name} e {b.name} são</p>
+      <p className={`mt-3 font-display text-4xl leading-tight ${same ? 'text-vila' : 'text-lobos'}`}>{same ? 'do mesmo time' : 'de times diferentes'}</p>
+      <p className="mt-4 text-sm text-muted">Guarde isso com cuidado. Só você sabe.</p>
+    </motion.div>
+  )
+}
+
+const AURA = {
+  boa: ['boa', 'É da Vila.', 'text-vila', 'bg-vila/10 ring-vila/30'],
+  ma: ['má', 'É um lobo.', 'text-lobos', 'bg-lobos/12 ring-lobos/40'],
+  desconhecida: ['desconhecida', 'É um papel solo: não é da Vila nem dos lobos.', 'text-solo', 'bg-solo/10 ring-solo/30'],
+} as const
+
+function AuraResult({ p, aura }: { p: Player; aura: keyof typeof AURA }) {
+  const [word, meaning, text, ring] = AURA[aura]
+  return (
+    <motion.div initial={{ rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 140, damping: 16 }}
+      style={{ transformPerspective: 800 }} role="status" className={`flex flex-col items-center rounded-3xl p-8 text-center ring-1 ${ring}`}>
+      <Avatar name={p.name} size={72} />
+      <p className="mt-4 text-lg font-medium">A aura de {p.name} é</p>
+      <p className={`mt-3 font-display text-4xl leading-tight ${text}`}>{word}</p>
+      <p className="mt-1 text-sm text-muted">{meaning}</p>
+      <p className="mt-4 text-sm text-muted">Guarde isso com cuidado. Só você sabe.</p>
+    </motion.div>
   )
 }
 
@@ -171,17 +220,18 @@ function Letters({ msgs }: { msgs?: string[] }) {
   )
 }
 
-function SeerResult({ p, wolf }: { p: Player; wolf: boolean }) {
+function SeerResult({ p, role }: { p: Player; role: RoleId }) {
+  const def = ROLES[role]
+  const ring = { lobos: 'bg-lobos/12 ring-lobos/40', vila: 'bg-vila/10 ring-vila/30', solo: 'bg-solo/10 ring-solo/30' }[def.team]
   return (
     <motion.div initial={{ rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 140, damping: 16 }}
-      style={{ transformPerspective: 800 }} role="status"
-      className={`flex flex-col items-center rounded-3xl p-8 text-center ring-1 ${wolf ? 'bg-lobos/12 ring-lobos/40' : 'bg-vila/10 ring-vila/30'}`}>
+      style={{ transformPerspective: 800 }} role="status" className={`flex flex-col items-center rounded-3xl p-8 text-center ring-1 ${ring}`}>
       <Avatar name={p.name} size={72} />
-      <p className="mt-4 text-lg font-medium">{p.name}</p>
-      <div className={`mt-4 flex items-center gap-2 text-2xl font-semibold ${wolf ? 'text-lobos' : 'text-vila'}`}>
-        {wolf ? <><RoleIcon role="lobisomem" size={28} />É um lobisomem</> : <><Icon name="check" size={28} />Não é lobisomem</>}
-      </div>
-      <p className="mt-3 text-sm text-muted">Guarde isso com cuidado. Só você sabe.</p>
+      <p className="mt-4 text-lg font-medium">{p.name} é</p>
+      <div className="mt-3"><RoleBadge role={role} size={64} /></div>
+      <p className={`mt-3 font-display text-4xl leading-tight ${teamText[def.team]}`}>{def.name}</p>
+      <p className="mt-1 text-sm text-muted">{TEAM_LABEL[def.team]}</p>
+      <p className="mt-4 text-sm text-muted">Guarde isso com cuidado. Só você sabe.</p>
     </motion.div>
   )
 }
@@ -198,7 +248,7 @@ function Potion({ icon, color, title, text, children }: { icon: UiIconName; colo
   )
 }
 
-function Power({ icon, title, text, v, set, big }: { icon: ReactNode; title: string; text: string; v: boolean; set: (v: boolean) => void; big?: boolean }) {
+export function Power({ icon, title, text, v, set, big }: { icon: ReactNode; title: string; text: string; v: boolean; set: (v: boolean) => void; big?: boolean }) {
   return (
     <motion.button whileTap={{ scale: 0.98 }} onClick={() => set(!v)} aria-pressed={v}
       className={`mt-4 flex w-full items-center gap-4 rounded-3xl p-4 text-left transition-colors ${big ? 'py-6' : ''} ${v ? selectedClass : 'card'}`}>

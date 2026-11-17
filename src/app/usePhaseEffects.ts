@@ -5,7 +5,7 @@ import { bell, fanfare, howl, setAmbience, setSoundEnabled, thud } from '../ui/k
 
 
 /** Public moments read aloud. Private turns stay silent. */
-function narrationFor(g: GameState): string | null {
+export function narrationFor(g: GameState): string | null {
   if (g.phase === 'announce') return g.announcements.map((n) => noteText(g, n)).join('. ')
   if (g.phase === 'night' && g.cursor === 0) return `Noite ${g.day}. A vila adormece.`
   if (g.phase === 'day') return 'Discussão aberta. Quem são os lobos?'
@@ -32,7 +32,7 @@ export function usePhaseEffects(game: GameState | null) {
   const [interlude, setInterlude] = useState<Interlude | null>(null)
   const shown = useRef('')
 
-  const narration = game?.settings.narration ? narrationFor(game) : null
+  const narration = game?.settings.mode === 'narrador' && game.settings.narration ? narrationFor(game) : null
   const buzz = game?.phase === 'announce' || game?.phase === 'end'
   useEffect(() => {
     if (!narration) return
@@ -53,7 +53,7 @@ export function usePhaseEffects(game: GameState | null) {
     }
   }, [game])
 
-  const sound = !!game?.settings.sound
+  const sound = game?.settings.mode === 'narrador' && game.settings.sound
   useEffect(() => { setSoundEnabled(sound); return () => setSoundEnabled(false) }, [sound])
   const sting = !game ? null
     : game.phase === 'end' ? `end-${game.startedAt}`

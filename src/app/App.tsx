@@ -1,6 +1,6 @@
 import { AnimatePresence, MotionConfig, motion, useIsPresent } from 'motion/react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { ackAnnounce, confirmLynch, createGame, hunterShoot, openVote, revealNext, startVote, submitNight, submitVote, type GameState } from '../engine/game'
+import { ackAnnounce, confirmLynch, continueDealt, createGame, dayPower, hunterShoot, openVote, revealNext, startVote, submitNight, submitVote, type GameState } from '../engine/game'
 import { Announce, Hunter } from '../ui/game/Announce'
 import { Day } from '../ui/game/Day'
 import { Defense } from '../ui/game/Defense'
@@ -21,7 +21,8 @@ import { addResult, emptyStats } from './stats'
 import { Setup } from '../ui/setup/Setup'
 import { Tutorial } from '../ui/help/Tutorial'
 import { load, save, type Saved } from './storage'
-import { usePhaseEffects } from './usePhaseEffects'
+import { narrationFor, usePhaseEffects } from './usePhaseEffects'
+import { Icon } from '../ui/kit/icons'
 
 const UNDO_DEPTH = 40
 
@@ -56,11 +57,11 @@ export default function App() {
       night: <Night s={game} onChoose={(c) => apply((g) => submitNight(g, c))} />,
       announce: <Announce s={game} onNext={() => apply(ackAnnounce)} />,
       hunter: <Hunter s={game} onShoot={(t) => apply((g) => hunterShoot(g, t))} />,
-      day: <Day s={game} onVote={() => apply(startVote)} onTick={setTimer} />,
+      day: <Day s={game} onVote={() => apply(startVote)} onPower={(a, t) => apply((g) => dayPower(g, a, t))} onTick={setTimer} />,
       vote: <Vote s={game} onSecret={(t) => apply((g) => submitVote(g, t))} onOpen={(t) => apply((g) => openVote(g, t))} />,
       defense: <Defense s={game} onDecide={(yes) => apply((g) => confirmLynch(g, yes))} onTick={setTimer} />,
       end: <End s={game} onAgain={start} onMenu={quit} onScore={() => setScore(true)} />,
-      dealt: <Dealt s={game} onAgain={start} onMenu={quit} />,
+      dealt: <Dealt s={game} onAgain={start} onMenu={quit} onContinue={() => apply(continueDealt)} />,
     }[game.phase]
   }
 
@@ -69,6 +70,7 @@ export default function App() {
       <MotionConfig reducedMotion="user">
         <AnimatePresence mode="wait">
           <motion.main key={key} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25, ease: 'easeOut' }}>
+            {game?.settings.mode === 'humano' && <ReadAloud text={narrationFor(game)} />}
             <Inert>{screen}</Inert>
           </motion.main>
         </AnimatePresence>
@@ -90,6 +92,19 @@ export default function App() {
         <AnimatePresence>{tutorial && <Tutorial onDone={closeTutorial} />}</AnimatePresence>
       </MotionConfig>
     </PhotoContext.Provider>
+  )
+}
+
+/** Narrador humano: the line the app would speak, for the narrator to read out. */
+function ReadAloud({ text }: { text: string | null }) {
+  if (!text) return null
+  return (
+    <div className="mx-auto w-full max-w-md px-5 pt-[max(1.25rem,calc(env(safe-area-inset-top)+.5rem))] pr-16">
+      <div className="flex gap-3 rounded-3xl bg-moon/10 p-4 ring-1 ring-moon/25" role="status">
+        <Icon name="book" size={20} className="mt-0.5 shrink-0 text-moon" />
+        <div><p className="eyebrow text-moon">Narrador, leia em voz alta</p><p className="mt-1 text-[15px] leading-relaxed">{text}</p></div>
+      </div>
+    </div>
   )
 }
 

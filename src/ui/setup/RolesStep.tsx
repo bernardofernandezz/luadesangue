@@ -48,7 +48,7 @@ export function RolesStep({ data, set, setS }: { data: SetupData; set: (p: Parti
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0 flex-1 basis-64">
           <h2 className="text-2xl font-semibold tracking-tight">Papéis</h2>
-          <p className="mt-1 text-sm text-muted">{settings.randomRoles ? 'Toque para adicionar, segure para ler. Pode escolher mais papéis que jogadores: o jogo sorteia quais entram.' : 'Escolha o papel de cada jogador.'}</p>
+          <p className="mt-1 text-sm text-muted">{settings.randomRoles ? 'Toque para adicionar, toque no ? para ver o que o papel faz. Pode escolher mais papéis que jogadores: o jogo sorteia quais entram.' : 'Escolha o papel de cada jogador.'}</p>
         </div>
         {settings.randomRoles && (
           <div className="flex flex-wrap gap-2">
@@ -108,6 +108,7 @@ export function RolesStep({ data, set, setS }: { data: SetupData; set: (p: Parti
               className={`flex flex-col items-center gap-2 rounded-2xl p-3 ${data.fixed[pickFor ?? ''] === r.id ? selectedClass : 'card'}`}>
               <RoleBadge role={r.id} size={40} />
               <span className="text-center text-xs leading-tight font-medium">{r.name}</span>
+              <span className="line-clamp-2 text-center text-[11px] leading-snug text-muted">{r.tagline}</span>
             </button>
           ))}
         </div>
@@ -127,15 +128,23 @@ function RoleTile({ role, count, i, onAdd, onRemove, onInfo }: { role: RoleId; c
       <motion.button whileTap={{ scale: 0.94 }} onPointerDown={down} onPointerUp={up} onPointerLeave={up} onContextMenu={(e) => e.preventDefault()}
         onClick={() => { if (!long.current) onAdd() }} aria-label={`${r.name}${count ? `, ${count} na partida` : ''}. Toque para adicionar.`}
         className={`flex w-full flex-col items-center gap-2 rounded-2xl px-1.5 pt-4 pb-3 transition-colors select-none ${count ? 'bg-moon/10 ring-1 ring-white/50' : 'card'}`}>
-        <RoleBadge role={role} size={44} />
+        <span className="relative">
+          <RoleBadge role={role} size={44} />
+          <AnimatePresence>
+            {count > 0 && <motion.span key="c" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={spring}
+              className="pointer-events-none absolute -right-2 -bottom-1 grid size-6 place-items-center rounded-full bg-moon text-xs font-bold text-bg ring-2 ring-bg">{count}</motion.span>}
+          </AnimatePresence>
+        </span>
         <span className="text-center text-[13px] leading-tight font-medium">{r.name}</span>
+        <span className="line-clamp-2 text-center text-[11px] leading-snug text-muted">{r.tagline}</span>
         {r.novo && <span className="text-[9px] font-semibold tracking-widest text-moon uppercase">Novo</span>}
       </motion.button>
+      <button onClick={onInfo} aria-label={`O que faz ${r.name}`} className="absolute top-1.5 right-1.5 grid size-7 place-items-center rounded-full bg-raised text-muted">
+        <Icon name="help" size={14} />
+      </button>
       <AnimatePresence>
         {count > 0 && (
           <>
-            <motion.span key="c" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={spring}
-              className="pointer-events-none absolute top-2 right-2 grid size-6 place-items-center rounded-full bg-moon text-xs font-bold text-bg">{count}</motion.span>
             <motion.button key="m" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={spring} onClick={onRemove}
               aria-label={`Remover ${r.name}`} className="absolute top-1.5 left-1.5 grid size-7 place-items-center rounded-full bg-raised text-muted">
               <Icon name="minus" size={14} />

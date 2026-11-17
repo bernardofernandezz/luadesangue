@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { ROLES } from '../../engine/roles'
-import { packOf, type GameState, type Player } from '../../engine/game'
+import { packOf, player, type GameState, type Player } from '../../engine/game'
 import { Btn } from '../kit/controls'
 import { Screen } from '../kit/layout'
 import { useReadDelay } from '../kit/useReadDelay'
@@ -15,14 +15,25 @@ export function Reveal({ s, onNext }: { s: GameState; onNext: () => void }) {
 function RevealCard({ s, p, onNext }: { s: GameState; p: Player; onNext: () => void }) {
   const ready = useReadDelay(2000)
   const pack = packOf(s, p.id)
+  const bounty = s.bounty[p.id]
   return (
     <Screen kicker={`${p.name}, este é você`}
       footer={<Btn disabled={!ready} onClick={onNext}>{ready ? 'Entendi, esconder' : 'Leia sua carta…'}</Btn>}>
       <motion.div initial={{ rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 120, damping: 16 }}
         style={{ transformPerspective: 900 }}>
-        <RoleDetails role={p.role} pulse stagger={0.35} extra={pack.length > 0 && <Pack wolves={pack} />} />
+        <RoleDetails role={p.role} pulse stagger={0.35} extra={pack.length > 0 ? <Pack wolves={pack} /> : bounty != null && <Bounty target={player(s, bounty)} />} />
       </motion.div>
     </Screen>
+  )
+}
+
+function Bounty({ target }: { target: Player }) {
+  return (
+    <section className="rounded-3xl bg-solo/10 p-5 ring-1 ring-solo/25">
+      <h3 className="eyebrow text-solo">Seu alvo</h3>
+      <p className="mt-3 flex items-center gap-3"><Avatar name={target.name} size={32} /><span className="font-medium">{target.name}</span></p>
+      <p className="mt-2 text-sm text-muted">Faça a vila linchar essa pessoa e você vence.</p>
+    </section>
   )
 }
 

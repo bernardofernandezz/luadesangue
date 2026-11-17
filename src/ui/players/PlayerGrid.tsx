@@ -4,20 +4,20 @@ import { selectedClass, spring } from '../kit/styles'
 import { Icon } from '../kit/icons'
 import { Avatar } from './Avatar'
 
-/** Dead players are never selectable. Without `onSelect` it is display only. `marks` shows a count badge (the pack's votes). */
-export function PlayerGrid({ players, selected = [], onSelect, can = () => true, marks }: {
+/** Dead players are selectable only with `allowDead` (the Médium). Without `onSelect` it is display only. `marks` shows a count badge (the pack's votes). */
+export function PlayerGrid({ players, selected = [], onSelect, can = () => true, marks, allowDead }: {
   players: Player[]; selected?: (number | null | undefined)[]; onSelect?: (id: number) => void
-  can?: (p: Player) => boolean; marks?: Record<number, number>
+  can?: (p: Player) => boolean; marks?: Record<number, number>; allowDead?: boolean
 }) {
   const readOnly = !onSelect
   return (
     <div className="grid grid-cols-3 gap-2.5">
       {players.map((p, i) => {
-        const ok = p.alive && can(p) && !readOnly
+        const ok = (p.alive || !!allowDead) && can(p) && !readOnly
         const on = selected.includes(p.id)
         return (
           <motion.button key={p.id} disabled={!ok} onClick={() => onSelect?.(p.id)} aria-pressed={readOnly ? undefined : on}
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: !p.alive ? 0.3 : ok || readOnly ? 1 : 0.45, y: 0 }}
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: !p.alive && !ok ? 0.3 : ok || readOnly ? 1 : 0.45, y: 0 }}
             transition={{ delay: i * 0.025 }} whileTap={ok ? { scale: 0.94 } : undefined}
             className={`relative flex flex-col items-center gap-2 rounded-2xl px-2 pt-4 pb-3 transition-colors disabled:cursor-default
               ${on ? `border border-transparent ${selectedClass}` : 'card'}`}>
