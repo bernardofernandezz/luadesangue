@@ -8,7 +8,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
+      workbox: { cleanupOutdatedCaches: true },
       manifest: {
         name: 'Lua de Sangue: Lobisomem',
         short_name: 'Lua de Sangue',

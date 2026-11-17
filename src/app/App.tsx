@@ -20,6 +20,7 @@ import { Scoreboard } from '../ui/players/Scoreboard'
 import { addResult, emptyStats } from './stats'
 import { Setup } from '../ui/setup/Setup'
 import { Tutorial } from '../ui/help/Tutorial'
+import { UpdatePrompt } from '../ui/help/Update'
 import { load, save, type Saved } from './storage'
 import { narrationFor, usePhaseEffects } from './usePhaseEffects'
 import { Icon } from '../ui/kit/icons'
@@ -90,6 +91,7 @@ export default function App() {
 
         <AnimatePresence>{interlude && <Transition key={`${interlude.kind}${interlude.day}`} {...interlude} onDone={endInterlude} />}</AnimatePresence>
         <AnimatePresence>{tutorial && <Tutorial onDone={closeTutorial} />}</AnimatePresence>
+        <UpdatePrompt />
       </MotionConfig>
     </PhotoContext.Provider>
   )
